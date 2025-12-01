@@ -325,11 +325,12 @@ int main() {
     srand(time(0));
     string inputPath, password;
   
-    cout<<"==============================================="<<endl;
-    cout<<"      Smart Secure File Encryptor/Decryptor    "<<endl;
-    cout<<"\n     By NullYex Team - B.tech Ai&Ds (IBM)     "<<endl;
-    cout<<"    Amrit Ranjan, Kamran Alvi, Farhan Khalid   "<<endl;
-    cout<<"==============================================="<<endl;
+    cout<<" ============================================="<<endl;
+    cout<<"|    Smart Secure File Encryptor/Decryptor    |"<<endl;
+    cout<<" ---------------------------------------------"<<endl;
+    cout<<"|     By NullYex Team - B.tech Ai&Ds (IBM)    |"<<endl;
+    cout<<"|   Amrit Ranjan, Kamran Alvi, Farhan Khalid  |"<<endl;
+    cout<<" ============================================="<<endl;
 
     //Infinite loop: keeps the program running until user types 'exit'
     while (true) {
