@@ -110,7 +110,7 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         originalExtension = getFileExtension(inputFileName);
         string basePath = removeExtension(inputFileName);
         outputFileName = basePath + EXTENSION;
-        cout<<"\nTarget output: "<<outputFileName<<endl;
+        cout<<"Target output: "<<outputFileName<<endl;
 
         ofstream outputFile(outputFileName, ios::binary);
         if (!outputFile.is_open()) {
@@ -249,6 +249,7 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
             if (retryChoice == 'y' || retryChoice == 'Y') {
                 cout<<"Enter password again: ";
                 getline(cin, password);
+                cout<<endl;
             } else {
                 cout<<"Decryption aborted by user."<<endl;
                 return false; 
@@ -287,7 +288,7 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         //4. Decrypt Body
         vector<char> buffer(BUFFER_SIZE);
         vector<char> brandSkip(BRANDING.size());
-        cout<<"Decrypting (Optimized Mode)..."<<endl;
+        cout<<"Decrypting Please wait..."<<endl;
 
         size_t pIndex = keyIndex % passwordLength;
 
@@ -371,6 +372,7 @@ int main() {
 
         cout<<"\nEnter password: ";
         getline(cin, password);
+        cout<<endl;
 
         //Run the main logic. It returns true if successful.
         if (processFile(inputPath, password, encryptMode)) {
