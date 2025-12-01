@@ -1,7 +1,5 @@
 # 🔒 NX-Crypt: Smart File Encryption Tool
 
-### By NullYex Team
-
 ![C++](https://img.shields.io/badge/Language-C++-blue.svg) ![Security](https://img.shields.io/badge/Security-Salted%20Hash-green.svg) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20MacOS-lightgrey.svg)
 
 **NX-Crypt** is a robust, command-line interface (CLI) tool designed to securely encrypt and decrypt files of any type (images, videos, documents, etc.) using advanced C++ file handling and cryptographic logic.
@@ -56,9 +54,7 @@ g++ main.cpp -o NX-Crypt
 
 *(On Windows, just double-click `NX-Crypt.exe`)*
 
-### 3. Follow the Prompts
-
-The tool supports "Copy as Path" from Windows for easy file selection.
+### 3. Follow the Prompts (Example):
 
 ```text
 Enter file path: "C:\Users\Data\secret.mp4"
