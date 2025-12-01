@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NX-Crypt | Secure File Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- Animations & Glassmorphism --- */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #0f172a;
+            color: #fff;
+            overflow-x: hidden;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated Background Blobs */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #7c3aed; animation-delay: 0s; }
+        .blob-2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: #2563eb; animation-delay: 2s; }
+        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background: #db2777; animation-delay: 4s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(20px, -20px) scale(1.1); }
+        }
+
+        /* Glass Container */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+        .drop-zone.active {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.1);
+            transform: scale(1.02);
+        }
+
+        /* Inputs */
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Custom Scrollbar for Logs */
+        .log-box::-webkit-scrollbar { width: 6px; }
+        .log-box::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .log-box::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top: 3px solid #a855f7;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Background Animations -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Main Card -->
+    <div class="glass-panel rounded-3xl p-8 w-full max-w-2xl relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                NX-Crypt
+            </h1>
+            <p class="text-gray-400 text-sm">Smart Secure File Encryptor/Decryptor</p>
+            <div class="mt-2 text-xs text-gray-500 font-mono">
+                By NullYex Team - B.Tech AI&DS (IBM)
+            </div>
+        </div>
+
+        <!-- File Drop Zone -->
+        <div id="dropZone" class="drop-zone rounded-2xl p-10 text-center cursor-pointer mb-6 group">
+            <div id="dropContent">
+                <i class="fas fa-cloud-upload-alt text-5xl text-gray-500 mb-4 group-hover:text-purple-400 transition-colors"></i>
+                <h3 class="text-xl font-medium mb-2">Drag & Drop or Click to Upload</h3>
+                <p class="text-gray-400 text-sm">Supports any file type (Images, Videos, Docs)</p>
+            </div>
+            
+            <!-- Selected File Info (Hidden initially) -->
+            <div id="fileInfo" class="hidden">
+                <i id="fileIcon" class="fas fa-file text-4xl text-purple-500 mb-3"></i>
+                <div class="text-lg font-semibold truncate px-4" id="fileName">filename.ext</div>
+                <div class="text-sm text-gray-400" id="fileSize">0 MB</div>
+                <div id="detectBadge" class="mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-700 text-gray-300">
+                    Detecting...
+                </div>
+            </div>
+            <input type="file" id="fileInput" class="hidden">
+        </div>
+
+        <!-- Password Section -->
+        <div class="mb-6 opacity-50 pointer-events-none transition-all duration-300" id="controlsArea">
+            <label class="block text-gray-400 text-sm mb-2 ml-1">Password</label>
+            <div class="relative">
+                <input type="password" id="password" class="glass-input w-full rounded-xl py-3 px-4 pl-10" placeholder="Enter secure password...">
+                <i class="fas fa-lock absolute left-3 top-3.5 text-gray-500"></i>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="processBtn" class="w-full py-4 rounded-xl font-bold text-lg shadow-lg transform transition hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed bg-gray-700 text-gray-400 cursor-not-allowed" disabled>
+            Waiting for file...
+        </button>
+
+        <!-- Progress Bar (Hidden initially) -->
+        <div id="progressContainer" class="hidden mt-6">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                <span id="progressText">Processing...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2.5">
+                <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Log Output -->
+        <div class="mt-6">
+            <div class="bg-black/40 rounded-xl p-4 h-32 overflow-y-auto log-box font-mono text-xs text-green-400" id="consoleLog">
+                <div class="text-gray-500">>>> System Ready.</div>
+                <div class="text-gray-500">>>> Waiting for input...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // --- CONSTANTS & CONFIG (Matches C++ Code) ---
+        const BUFFER_SIZE = 1024 * 1024; // 1MB Chunk
+        const EXTENSION = ".NullYex";
+        const BRANDING = "By_NullYex";
+        const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
+
+        // --- GLOBAL STATE ---
+        let selectedFile = null;
+        let isEncrypted = false;
+
+        // --- UI ELEMENTS ---
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const dropContent = document.getElementById('dropContent');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameEl = document.getElementById('fileName');
+        const fileSizeEl = document.getElementById('fileSize');
+        const detectBadge = document.getElementById('detectBadge');
+        const controlsArea = document.getElementById('controlsArea');
+        const processBtn = document.getElementById('processBtn');
+        const consoleLog = document.getElementById('consoleLog');
+        const passwordInput = document.getElementById('password');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+
+        // --- LOGGING ---
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.textContent = `>>> ${msg}`;
+            if (type === 'error') div.className = 'text-red-400';
+            else if (type === 'success') div.className = 'text-green-300 font-bold';
+            else div.className = 'text-gray-300';
+            
+            consoleLog.appendChild(div);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        // --- DRAG & DROP UI ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        // --- FILE HANDLING ---
+        async function handleFile(file) {
+            selectedFile = file;
+            dropContent.classList.add('hidden');
+            fileInfo.classList.remove('hidden');
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            
+            // Check Branding (Smart Detection)
+            const headerSlice = file.slice(0, BRANDING_BYTES.length);
+            const headerBuffer = await headerSlice.arrayBuffer();
+            const headerText = new TextDecoder().decode(headerBuffer);
+
+            controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+            
+            if (headerText === BRANDING) {
+                isEncrypted = true;
+                detectBadge.textContent = "ENCRYPTED FILE DETECTED";
+                detectBadge.className = "mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-pink-500/20 text-pink-300 border border-pink-500/50";
+                processBtn.textContent = "Decrypt File";
+                processBtn.className = "w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:scale-[1.02] transform transition";
+                processBtn.disabled = false;
+                log(`Detected ${BRANDING} signature. Mode: DECRYPT`);
+            } else {
+                isEncrypted = false;
+                detectBadge.textContent = "STANDARD FILE DETECTED";
+                detectBadge.className = "mt-3 inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-500/20 text-green-300 border border-green-500/50";
+                processBtn.textContent = "Encrypt File";
+                processBtn.className = "w-full py-4 rounded-xl font-bold text-lg shadow-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-[1.02] transform transition";
+                processBtn.disabled = false;
+                log("Standard file. Mode: ENCRYPT");
+            }
+        }
+
+        // --- CRYPTO HELPERS ---
+
+        // Generates random Salt (Same logic as C++)
+        function generateSalt(length) {
+            const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            let salt = "";
+            for (let i = 0; i < length; i++) {
+                salt += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            return salt;
+        }
+
+        // Simple Hash (BigInt for 64-bit logic matching C++)
+        function simpleHash(data) {
+            let hash = 5381n;
+            for (let i = 0; i < data.length; i++) {
+                const c = BigInt(data.charCodeAt(i));
+                // hash = ((hash << 5) + hash) + c
+                hash = ((hash << 5n) + hash) + c;
+                // Simulate unsigned long long overflow (64-bit wrapping)
+                hash = BigInt.asUintN(64, hash);
+            }
+            return hash;
+        }
+
+        // --- PROCESSING LOGIC ---
+        processBtn.addEventListener('click', async () => {
+            const password = passwordInput.value;
+            if (!password) {
+                log("Error: Password cannot be empty!", "error");
+                return;
+            }
+
+            controlsArea.classList.add('opacity-50', 'pointer-events-none');
+            processBtn.disabled = true;
+            processBtn.innerHTML = '<div class="loader inline-block mr-2"></div> Processing...';
+            progressContainer.classList.remove('hidden');
+
+            try {
+                if (!isEncrypted) {
+                    await encryptFile(selectedFile, password);
+                } else {
+                    await decryptFile(selectedFile, password);
+                }
+            } catch (err) {
+                log(err.message, 'error');
+                processBtn.textContent = "Failed";
+                processBtn.classList.add('bg-red-600');
+            }
+            
+            // Reset UI
+            processBtn.disabled = false;
+            controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+            if(!isEncrypted) processBtn.textContent = "Encrypt File";
+            else processBtn.textContent = "Decrypt File";
+        });
+
+
+        // --- ENCRYPTION FUNCTION ---
+        async function encryptFile(file, password) {
+            log("Starting Encryption...");
+            
+            const passwordLength = password.length;
+            let keyIndex = 0;
+            const chunks = []; // Store final file parts
+
+            // 1. Header: Branding
+            chunks.push(BRANDING_BYTES);
+
+            // 2. Header: Salt
+            const salt = generateSalt(8);
+            chunks.push(new TextEncoder().encode(salt));
+
+            // 3. Header: Hash
+            const passHash = simpleHash(password + salt);
+            const hashBuffer = new ArrayBuffer(8);
+            // Use DataView to ensure Little Endian (standard C++ behavior on x86)
+            new DataView(hashBuffer).setBigUint64(0, passHash, true); 
+            chunks.push(new Uint8Array(hashBuffer));
+
+            // 4. Header: Extension
+            // Extract extension (e.g. .png)
+            const dotIndex = file.name.lastIndexOf('.');
+            const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
+            const extBytes = new TextEncoder().encode(ext);
+            const extLen = extBytes.length;
+
+            // Encrypt Length Byte
+            const keyChar = password.charCodeAt(keyIndex % passwordLength);
+            const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
+            chunks.push(new Uint8Array([encryptedLen]));
+            keyIndex++;
+
+            // Encrypt Extension Bytes
+            const encryptedExt = new Uint8Array(extLen);
+            for(let i=0; i<extLen; i++) {
+                const k = password.charCodeAt(keyIndex % passwordLength);
+                const rollingKey = (k + keyIndex) % 256;
+                encryptedExt[i] = extBytes[i] ^ rollingKey;
+                keyIndex++;
+            }
+            chunks.push(encryptedExt);
+
+            // 5. Body Processing
+            const totalSize = file.size;
+            let offset = 0;
+
+            while (offset < totalSize) {
+                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
+                const chunkBuffer = await chunkSlice.arrayBuffer();
+                const chunkArray = new Uint8Array(chunkBuffer);
+
+                // Inject Branding before chunk
+                chunks.push(BRANDING_BYTES);
+
+                // Encrypt Chunk
+                for (let i = 0; i < chunkArray.length; i++) {
+                    const pIndex = keyIndex % passwordLength;
+                    const baseKey = password.charCodeAt(pIndex);
+                    const rollingKey = (baseKey + keyIndex) % 256;
+                    
+                    chunkArray[i] = chunkArray[i] ^ rollingKey;
+                    keyIndex++;
+                }
+                chunks.push(chunkArray);
+
+                offset += BUFFER_SIZE;
+                
+                // Update Progress
+                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                progressBar.style.width = percent + "%";
+                progressPercent.textContent = percent + "%";
+                
+                // Yield to UI thread to keep animation smooth
+                await new Promise(r => setTimeout(r, 0));
+            }
+
+            // Create and Download Blob
+            const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
+            downloadFile(new Blob(chunks), finalName);
+            log("Encryption Complete! Download started.", "success");
+        }
+
+
+        // --- DECRYPTION FUNCTION ---
+        async function decryptFile(file, password) {
+            log("Starting Decryption...");
+            
+            const passwordLength = password.length;
+            let keyIndex = 0;
+            let offset = 0;
+
+            // 1. Verify Branding
+            const sigBlob = file.slice(0, BRANDING.length);
+            const sigText = await sigBlob.text();
+            if(sigText !== BRANDING) throw new Error("Invalid branding signature.");
+            offset += BRANDING.length;
+
+            // 2. Read Salt (8 bytes)
+            const saltBlob = file.slice(offset, offset + 8);
+            const salt = await saltBlob.text();
+            offset += 8;
+
+            // 3. Verify Hash (8 bytes)
+            const hashBlob = file.slice(offset, offset + 8);
+            const hashBuf = await hashBlob.arrayBuffer();
+            const storedHash = new DataView(hashBuf).getBigUint64(0, true);
+            offset += 8;
+
+            const inputHash = simpleHash(password + salt);
+            if(inputHash !== storedHash) {
+                throw new Error("ACCESS DENIED: Incorrect Password.");
+            }
+            log("Password Verified. Access Granted.", "success");
+
+            // 4. Read Extension
+            const lenBlob = file.slice(offset, offset + 1);
+            const lenArr = new Uint8Array(await lenBlob.arrayBuffer());
+            offset += 1;
+
+            const keyChar = password.charCodeAt(keyIndex % passwordLength);
+            const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256;
+            keyIndex++;
+
+            const extBlob = file.slice(offset, offset + extLen);
+            const extArr = new Uint8Array(await extBlob.arrayBuffer());
+            offset += extLen;
+
+            const decryptedExtBytes = new Uint8Array(extLen);
+            for(let i=0; i<extLen; i++) {
+                const k = password.charCodeAt(keyIndex % passwordLength);
+                const rollingKey = (k + keyIndex) % 256;
+                decryptedExtBytes[i] = extArr[i] ^ rollingKey;
+                keyIndex++;
+            }
+            const extension = new TextDecoder().decode(decryptedExtBytes);
+            log(`Restored Extension: ${extension}`);
+
+            // 5. Body Processing
+            const chunks = [];
+            const totalSize = file.size;
+
+            while(offset < totalSize) {
+                // Skip Branding Tag
+                offset += BRANDING.length;
+                if(offset >= totalSize) break;
+
+                // Read Chunk
+                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
+                const chunkBuf = await chunkSlice.arrayBuffer();
+                const chunkArray = new Uint8Array(chunkBuf);
+                
+                for(let i=0; i<chunkArray.length; i++) {
+                    const pIndex = keyIndex % passwordLength;
+                    const baseKey = password.charCodeAt(pIndex);
+                    const rollingKey = (baseKey + keyIndex) % 256;
+                    
+                    chunkArray[i] = chunkArray[i] ^ rollingKey;
+                    keyIndex++;
+                }
+                chunks.push(chunkArray);
+                offset += chunkArray.length;
+
+                // Update Progress
+                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                progressBar.style.width = percent + "%";
+                progressPercent.textContent = percent + "%";
+                await new Promise(r => setTimeout(r, 0));
+            }
+
+            // Construct Original Filename
+            let originalName = file.name;
+            if (originalName.endsWith(EXTENSION)) {
+                originalName = originalName.slice(0, -EXTENSION.length);
+            }
+            originalName += extension;
+
+            downloadFile(new Blob(chunks), originalName);
+            log("Decryption Complete! Download started.", "success");
+        }
+
+        // --- DOWNLOAD HELPER ---
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+    </script>
+</body>
+</html>
