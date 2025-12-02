@@ -10,6 +10,8 @@
 #include <vector>   //For using dynamic arrays (buffers)
 #include <cstdlib>  //For standard tools like random numbers
 #include <ctime>    //For getting the current time (to seed random numbers)
+#include <iomanip>  //For text formatting
+
 using namespace std;
 
 //CONFIGURATION
@@ -22,6 +24,13 @@ const string EXTENSION = ".NullYex";
 const string BRANDING = "By_NullYex"; 
 
 //FUNCTIONS DECLARATIONS
+
+// Helper: Check if file exists
+bool fileExists(const string& path) {
+    ifstream f(path.c_str());
+    return f.good();
+}
+
 //Generates random text (Salt) to mix with the password.
 //This prevents hackers from guessing passwords using pre-calculated tables.
 string generateSalt(int length) {
@@ -110,6 +119,21 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         originalExtension = getFileExtension(inputFileName);
         string basePath = removeExtension(inputFileName);
         outputFileName = basePath + EXTENSION;
+        
+        // --- SAFETY CHECK: Overwrite Protection ---
+        if (fileExists(outputFileName)) {
+            cout<<"\nWarning: Output file '"<<outputFileName<<"' already exists."<<endl;
+            cout<<"Do you want to overwrite it? (y/n): ";
+            char choice;
+            cin>>choice;
+            cin.ignore(10000, '\n'); // Clear buffer
+            cout<<endl;
+            if (choice != 'y' && choice != 'Y') {
+                cout<<"Operation cancelled."<<endl;
+                return false;
+            }
+        }
+
         cout<<"Target output: "<<outputFileName<<endl;
 
         ofstream outputFile(outputFileName, ios::binary);
@@ -279,6 +303,20 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         string basePath = removeExtension(inputFileName);
         outputFileName = basePath + restoredExtension;
         
+        // --- SAFETY CHECK: Overwrite Protection ---
+        if (fileExists(outputFileName)) {
+            cout<<"Warning: Output file '"<<outputFileName<<"' already exists."<<endl;
+            cout<<"Do you want to overwrite it? (y/n): ";
+            char choice;
+            cin>>choice;
+            cin.ignore(10000, '\n');
+            cout<<endl;
+            if (choice != 'y' && choice != 'Y') {
+                cout<<"Operation cancelled."<<endl;
+                return false;
+            }
+        }
+
         ofstream outputFile(outputFileName, ios::binary);
         if (!outputFile.is_open()) {
             cout<<"Error: Could not create output file."<<endl;
