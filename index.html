@@ -246,7 +246,6 @@
             <!-- Text Input Area -->
             <div class="mb-4">
                 <label class="block text-gray-300 text-[10px] md:text-xs font-bold mb-2 uppercase tracking-wide">Message / Encrypted Code</label>
-                <!-- Simple Container with fade mask on textarea -->
                 <div class="glass-input w-full rounded-2xl h-40 md:h-44 flex flex-col">
                     <textarea id="textInput" class="w-full h-full bg-transparent border-0 resize-none text-sm font-mono custom-scroll text-fade-mask focus:outline-none p-4 pr-1 placeholder-gray-500" placeholder="Type your secret message here... OR paste an encrypted code to decrypt."></textarea>
                 </div>
@@ -260,7 +259,6 @@
                     </label>
                     <div class="flex items-center gap-2">
                         <span id="copyFeedback" class="text-white text-[10px] md:text-xs font-bold uppercase hidden animate-pulse">Copied!</span>
-                        <!-- Silent Copy Button -->
                         <button onclick="copyTextOutput()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-2 border border-white/10">
                             <i class="fas fa-copy"></i> Copy
                         </button>
@@ -619,19 +617,29 @@
             controlsArea.classList.add('opacity-50', 'pointer-events-none');
             processBtn.disabled = true;
             processBtn.innerHTML = '<div class="loader inline-block mr-3"></div> Processing...';
-            progressContainer.classList.remove('hidden');
+            
             try {
                 if (!isEncrypted) await encryptFile(selectedFile, password);
                 else await decryptFile(selectedFile, password);
             } catch (err) {
                 log(err.message, 'error'); processBtn.textContent = "Failed";
                 processBtn.className = "w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-red-600 shadow-lg";
-                setTimeout(() => { processBtn.disabled = false; controlsArea.classList.remove('opacity-50', 'pointer-events-none'); updateFileBtnState(); }, 2000);
+                setTimeout(() => { 
+                    processBtn.disabled = false; 
+                    controlsArea.classList.remove('opacity-50', 'pointer-events-none'); 
+                    updateFileBtnState(); 
+                    progressContainer.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                }, 670);
             }
         }
 
         async function encryptFile(file, password) {
             log("Starting File Encryption...");
+            
+            // SHOW PROGRESS HERE (Starts only when processing actually begins)
+            progressContainer.classList.remove('hidden');
+            
             const passwordLength = password.length; let keyIndex = 0; const chunks = [];
             chunks.push(BRANDING_BYTES);
             const salt = generateSalt(8); chunks.push(new TextEncoder().encode(salt));
@@ -675,6 +683,9 @@
             const inputHash = simpleHash(password + salt);
             if(inputHash !== storedHash) throw new Error("ACCESS DENIED: Incorrect Password.");
             log("Password Verified. Access Granted.", "success");
+
+            // SHOW PROGRESS HERE (Only after password verification success)
+            progressContainer.classList.remove('hidden');
 
             const lenBlob = file.slice(offset, offset + 1); const lenArr = new Uint8Array(await lenBlob.arrayBuffer()); offset += 1;
             const keyChar = password.charCodeAt(keyIndex % passwordLength); const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256; keyIndex++;
