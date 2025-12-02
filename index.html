@@ -207,7 +207,7 @@
             <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">
                 NX-Crypt
             </h1>
-            <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Smart Secure Tool (AES-256)</p>
+            <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Smart Secure Tool</p>
             <a href="https://github.com/nullyex" target="_blank" class="credit-badge mt-2 inline-block px-3 py-1 md:px-4 md:py-1 rounded-full bg-white/10 border border-white/10 text-[10px] md:text-xs text-gray-300 font-semibold tracking-wider hover:bg-white/20 hover:text-white transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                 By NullYex Team • B.Tech AI&DS (IBM)
             </a>
@@ -329,19 +329,15 @@
     <!-- Logic Script -->
     <script>
         // --- CONSTANTS ---
+        const BUFFER_SIZE = 1024 * 1024; 
         const EXTENSION = ".NullYex";
         const BRANDING = "By_NullYex";
         const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
-        const SALT_LEN = 16;
-        const IV_LEN = 12;
-        const ITERATIONS = 100000;
-        const ALGO_NAME = 'AES-GCM';
-        const HASH_NAME = 'SHA-256';
         
         // Random Emoji List for Encrypted Files
         const MYSTERY_EMOJIS = ['🔒', '🔐', '🤐', '💀', '🙈', '🤦‍♀️', '🕵️', '🧩', '😂', '🎲', '🌀', '🔮', '🎭', '👻', '👽', '🤖', '👾', '🐉', '🌚', '🗿', '🤫', '🏴‍☠️'];
 
-        // --- MOUSE BLOB LOGIC (Optimized) ---
+        // --- MOUSE BLOB LOGIC ---
         const mouseBlob = document.getElementById('mouse-blob');
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
@@ -416,18 +412,6 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
         }
 
-        function concatBuffers(buffers) {
-            let totalLen = 0;
-            for (let b of buffers) totalLen += b.byteLength;
-            const tmp = new Uint8Array(totalLen);
-            let offset = 0;
-            for (let b of buffers) {
-                tmp.set(new Uint8Array(b), offset);
-                offset += b.byteLength;
-            }
-            return tmp.buffer;
-        }
-
         // --- TAB SWITCHING ---
         function switchTab(mode) {
             currentMode = mode;
@@ -470,7 +454,7 @@
 
             // Reset Icon
             fileIcon.className = "fas fa-file text-3xl md:text-4xl text-white";
-            fileIcon.textContent = ""; 
+            fileIcon.textContent = ""; // Clear emoji
 
             if(currentMode === 'file') updateFileBtnState();
             else updateTextBtnState();
@@ -479,7 +463,7 @@
 
         // --- ICON HELPER ---
         function getIconForFile(filename) {
-            if (filename.endsWith(EXTENSION)) return 'fa-file-shield'; 
+            if (filename.endsWith(EXTENSION)) return 'fa-file-shield'; // Default encrypted
             const ext = filename.split('.').pop().toLowerCase();
             switch(ext) {
                 case 'png': case 'jpg': case 'jpeg': case 'gif': case 'webp': case 'svg': return 'fa-file-image';
@@ -501,6 +485,7 @@
             dropContent.classList.add('hidden'); fileInfo.classList.remove('hidden');
             fileNameEl.textContent = file.name; fileSizeEl.textContent = formatBytes(file.size);
             
+            // Reset emoji state for standard file check
             fileIcon.textContent = ''; 
 
             const headerSlice = file.slice(0, BRANDING_BYTES.length);
@@ -514,6 +499,7 @@
                 detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span> ENCRYPTED';
                 detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-pink-900/20 text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]";
                 
+                // RANDOM EMOJI FOR ENCRYPTED FILE
                 const randomEmoji = MYSTERY_EMOJIS[Math.floor(Math.random() * MYSTERY_EMOJIS.length)];
                 fileIcon.className = "text-4xl md:text-5xl not-italic leading-none filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]";
                 fileIcon.textContent = randomEmoji;
@@ -525,6 +511,7 @@
                 detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span> STANDARD FILE';
                 detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-green-900/20 text-green-300 border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]";
                 
+                // STANDARD ICON
                 const iconClass = getIconForFile(file.name);
                 fileIcon.className = `fas ${iconClass} text-3xl md:text-4xl text-white`;
                 
@@ -578,22 +565,16 @@
             }
         }
 
-        // --- CRYPTO UTILS (AES-GCM) ---
-        async function deriveKey(password, salt) {
-            const enc = new TextEncoder();
-            const keyMaterial = await window.crypto.subtle.importKey(
-                "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
-            );
-            return window.crypto.subtle.deriveKey(
-                { name: "PBKDF2", salt: salt, iterations: ITERATIONS, hash: HASH_NAME },
-                keyMaterial,
-                { name: ALGO_NAME, length: 256 },
-                false,
-                ["encrypt", "decrypt"]
-            );
+        // --- CRYPTO (Same as before) ---
+        function generateSalt(length) {
+            const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            let salt = ""; for (let i = 0; i < length; i++) salt += charset.charAt(Math.floor(Math.random() * charset.length)); return salt;
+        }
+        function simpleHash(data) {
+            let hash = 5381n; for (let i = 0; i < data.length; i++) { const c = BigInt(data.charCodeAt(i)); hash = ((hash << 5n) + hash) + c; hash = BigInt.asUintN(64, hash); } return hash;
         }
 
-        // --- TEXT PROCESSING (AES-GCM) ---
+        // --- TEXT PROCESSING ---
         async function startTextProcessing() {
             const password = passwordInput.value;
             if (!password) { log("Error: Password cannot be empty!", "error"); return; }
@@ -602,83 +583,69 @@
 
             if (isTextEncrypted) {
                 try {
-                    // Decode Base64
                     const rawData = atob(text);
                     const buffer = new Uint8Array(rawData.length);
                     for(let i=0; i<rawData.length; i++) buffer[i] = rawData.charCodeAt(i);
 
-                    // Check Branding
                     let offset = 0;
                     const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
-                    if(brandingCheck !== BRANDING) throw new Error("Invalid Branding or Corrupted Data.");
+                    if(brandingCheck !== BRANDING) throw new Error("Invalid Branding");
                     offset += BRANDING_BYTES.length;
 
-                    // Extract Salt & IV
-                    const salt = buffer.slice(offset, offset + SALT_LEN);
-                    offset += SALT_LEN;
-                    const iv = buffer.slice(offset, offset + IV_LEN);
-                    offset += IV_LEN;
+                    const saltBytes = buffer.slice(offset, offset+8);
+                    const salt = new TextDecoder().decode(saltBytes);
+                    offset += 8;
 
-                    // Extract Ciphertext
-                    const ciphertext = buffer.slice(offset);
+                    const hashBytes = buffer.slice(offset, offset+8);
+                    const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
+                    offset += 8;
 
-                    // Derive Key & Decrypt
-                    const key = await deriveKey(password, salt);
-                    let decryptedBuffer;
-                    try {
-                        decryptedBuffer = await window.crypto.subtle.decrypt(
-                            { name: ALGO_NAME, iv: iv }, key, ciphertext
-                        );
-                    } catch(e) {
-                        throw new Error("Incorrect Password or Tampered Data.");
+                    const inputHash = simpleHash(password + salt);
+                    if(inputHash !== storedHash) throw new Error("Incorrect Password");
+
+                    const passwordLength = password.length;
+                    let keyIndex = 0;
+                    const lenByte = buffer[offset];
+                    const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                    const extLen = lenByte ^ (keyChar + keyIndex) % 256;
+                    keyIndex++; offset += 1;
+                    for(let i=0; i<extLen; i++) keyIndex++;
+                    offset += extLen;
+
+                    const body = buffer.slice(offset);
+                    for(let i=0; i<body.length; i++) {
+                        const pIndex = keyIndex % passwordLength;
+                        const baseKey = password.charCodeAt(pIndex);
+                        const rollingKey = (baseKey + keyIndex) % 256;
+                        body[i] = body[i] ^ rollingKey;
+                        keyIndex++;
                     }
-
-                    // Parse Decrypted Data: [ExtLen][Ext][Msg]
-                    const decryptedArray = new Uint8Array(decryptedBuffer);
-                    const extLen = decryptedArray[0];
-                    // We skip extension for text mode
-                    const msgBytes = decryptedArray.slice(1 + extLen);
-                    
-                    textOutput.value = new TextDecoder().decode(msgBytes);
+                    textOutput.value = new TextDecoder().decode(body);
                     textOutputContainer.classList.remove('hidden');
-                    log("Message Decrypted Successfully!", "success");
-
+                    log("Message Decrypted!", "success");
                 } catch(e) { log("Decryption Failed: " + e.message, "error"); }
             } else {
                 try {
-                    const salt = window.crypto.getRandomValues(new Uint8Array(SALT_LEN));
-                    const iv = window.crypto.getRandomValues(new Uint8Array(IV_LEN));
-                    const key = await deriveKey(password, salt);
-
-                    // Prepare Payload: [ExtLen (0)][No Ext][Text]
-                    // We use a dummy extension for text mode to match file structure
-                    const extBytes = new TextEncoder().encode(".txt");
-                    const msgBytes = new TextEncoder().encode(text);
+                    const passwordLength = password.length; let keyIndex = 0; const parts = [];
+                    parts.push(BRANDING_BYTES);
+                    const salt = generateSalt(8); parts.push(new TextEncoder().encode(salt));
+                    const passHash = simpleHash(password + salt);
+                    const hashBuffer = new ArrayBuffer(8); new DataView(hashBuffer).setBigUint64(0, passHash, true); parts.push(new Uint8Array(hashBuffer));
+                    const extBytes = new TextEncoder().encode(".txt"); const extLen = extBytes.length;
+                    const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                    const encryptedLen = extLen ^ (keyChar + keyIndex) % 256; parts.push(new Uint8Array([encryptedLen])); keyIndex++;
+                    const encryptedExt = new Uint8Array(extLen);
+                    for(let i=0; i<extLen; i++) { const k = password.charCodeAt(keyIndex % passwordLength); const rollingKey = (k + keyIndex) % 256; encryptedExt[i] = extBytes[i] ^ rollingKey; keyIndex++; }
+                    parts.push(encryptedExt);
+                    const body = new TextEncoder().encode(text);
+                    for(let i=0; i<body.length; i++) { const pIndex = keyIndex % passwordLength; const baseKey = password.charCodeAt(pIndex); const rollingKey = (baseKey + keyIndex) % 256; body[i] = body[i] ^ rollingKey; keyIndex++; }
+                    parts.push(body);
                     
-                    const payload = new Uint8Array(1 + extBytes.length + msgBytes.length);
-                    payload[0] = extBytes.length;
-                    payload.set(extBytes, 1);
-                    payload.set(msgBytes, 1 + extBytes.length);
-
-                    // Encrypt
-                    const ciphertext = await window.crypto.subtle.encrypt(
-                        { name: ALGO_NAME, iv: iv }, key, payload
-                    );
-
-                    // Pack: [Branding][Salt][IV][Ciphertext]
-                    const finalBuffer = concatBuffers([
-                        BRANDING_BYTES.buffer, 
-                        salt.buffer, 
-                        iv.buffer, 
-                        ciphertext
-                    ]);
-
-                    // Base64 Encode
-                    const bytes = new Uint8Array(finalBuffer);
-                    let binary = '';
-                    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                    const totalLength = parts.reduce((acc, curr) => acc + curr.length, 0);
+                    const merged = new Uint8Array(totalLength);
+                    let offset = 0; for(let p of parts) { merged.set(p, offset); offset += p.length; }
+                    let binary = ''; const len = merged.byteLength; for (let i = 0; i < len; i++) binary += String.fromCharCode(merged[i]);
                     textOutput.value = btoa(binary);
-                    
                     textOutputContainer.classList.remove('hidden');
                     copyTextOutput();
                     log("Message Encrypted & Copied!", "success");
@@ -688,8 +655,9 @@
 
         function copyTextOutput() {
             const output = document.getElementById('textOutput');
+            // Use old school execCommand which is generally supported in iframes where clipboard API is blocked
             output.select();
-            output.setSelectionRange(0, 99999); 
+            output.setSelectionRange(0, 99999); /* For mobile devices */
             try {
                 document.execCommand('copy');
                 const feedback = document.getElementById('copyFeedback'); 
@@ -698,11 +666,12 @@
             } catch (err) {
                 console.error('Fallback: Oops, unable to copy', err);
             }
+            // Deselect
             window.getSelection().removeAllRanges();
             output.blur();
         }
 
-        // --- FILE PROCESSING (AES-GCM) ---
+        // --- FILE PROCESSING ---
         async function startFileProcessing() {
             const password = passwordInput.value;
             if (!password) { log("Error: Password cannot be empty!", "error"); return; }
@@ -710,126 +679,94 @@
             processBtn.disabled = true;
             processBtn.innerHTML = '<div class="loader inline-block mr-3"></div> Processing...';
             
-            // Delay slightly to let UI update
-            setTimeout(async () => {
-                try {
-                    if (!isEncrypted) await encryptFile(selectedFile, password);
-                    else await decryptFile(selectedFile, password);
-                } catch (err) {
-                    log(err.message, 'error'); processBtn.textContent = "Failed";
-                    processBtn.className = "w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-red-600 shadow-lg";
-                    setTimeout(() => { 
-                        processBtn.disabled = false; 
-                        controlsArea.classList.remove('opacity-50', 'pointer-events-none'); 
-                        updateFileBtnState(); 
-                        progressContainer.classList.add('hidden');
-                        progressBar.style.width = '0%';
-                    }, 670);
-                }
-            }, 100);
+            try {
+                if (!isEncrypted) await encryptFile(selectedFile, password);
+                else await decryptFile(selectedFile, password);
+            } catch (err) {
+                log(err.message, 'error'); processBtn.textContent = "Failed";
+                processBtn.className = "w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-red-600 shadow-lg";
+                setTimeout(() => { 
+                    processBtn.disabled = false; 
+                    controlsArea.classList.remove('opacity-50', 'pointer-events-none'); 
+                    updateFileBtnState(); 
+                    progressContainer.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                }, 670);
+            }
         }
 
         async function encryptFile(file, password) {
-            log("Starting AES-256 Encryption...");
+            log("Starting File Encryption...");
+            
+            // SHOW PROGRESS HERE (Starts only when processing actually begins)
             progressContainer.classList.remove('hidden');
-            progressBar.style.width = '10%'; // Initial progress
-
-            // 1. Prepare Key
-            const salt = window.crypto.getRandomValues(new Uint8Array(SALT_LEN));
-            const iv = window.crypto.getRandomValues(new Uint8Array(IV_LEN));
-            const key = await deriveKey(password, salt);
-            progressBar.style.width = '30%';
-
-            // 2. Read File
-            const fileBuffer = await file.arrayBuffer();
             
-            // 3. Prepare Payload: [ExtLen][Ext][FileBytes]
-            const dotIndex = file.name.lastIndexOf('.');
-            const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
-            const extBytes = new TextEncoder().encode(ext);
-            
-            const payload = new Uint8Array(1 + extBytes.length + fileBuffer.byteLength);
-            payload[0] = extBytes.length;
-            payload.set(extBytes, 1);
-            payload.set(new Uint8Array(fileBuffer), 1 + extBytes.length);
-            progressBar.style.width = '50%';
+            const passwordLength = password.length; let keyIndex = 0; const chunks = [];
+            chunks.push(BRANDING_BYTES);
+            const salt = generateSalt(8); chunks.push(new TextEncoder().encode(salt));
+            const passHash = simpleHash(password + salt);
+            const hashBuffer = new ArrayBuffer(8); new DataView(hashBuffer).setBigUint64(0, passHash, true); chunks.push(new Uint8Array(hashBuffer));
+            const dotIndex = file.name.lastIndexOf('.'); const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
+            const extBytes = new TextEncoder().encode(ext); const extLen = extBytes.length;
+            const keyChar = password.charCodeAt(keyIndex % passwordLength);
+            const encryptedLen = extLen ^ (keyChar + keyIndex) % 256; chunks.push(new Uint8Array([encryptedLen])); keyIndex++;
+            const encryptedExt = new Uint8Array(extLen);
+            for(let i=0; i<extLen; i++) { const k = password.charCodeAt(keyIndex % passwordLength); const rollingKey = (k + keyIndex) % 256; encryptedExt[i] = extBytes[i] ^ rollingKey; keyIndex++; }
+            chunks.push(encryptedExt);
 
-            // 4. Encrypt
-            const ciphertext = await window.crypto.subtle.encrypt(
-                { name: ALGO_NAME, iv: iv }, key, payload
-            );
-            progressBar.style.width = '80%';
-
-            // 5. Pack: [Branding][Salt][IV][Ciphertext]
-            const finalBuffer = concatBuffers([
-                BRANDING_BYTES.buffer, 
-                salt.buffer, 
-                iv.buffer, 
-                ciphertext
-            ]);
-
+            const totalSize = file.size; let offset = 0;
+            while (offset < totalSize) {
+                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
+                const chunkBuffer = await chunkSlice.arrayBuffer();
+                const chunkArray = new Uint8Array(chunkBuffer);
+                chunks.push(BRANDING_BYTES);
+                for (let i = 0; i < chunkArray.length; i++) { const pIndex = keyIndex % passwordLength; const baseKey = password.charCodeAt(pIndex); const rollingKey = (baseKey + keyIndex) % 256; chunkArray[i] = chunkArray[i] ^ rollingKey; keyIndex++; }
+                chunks.push(chunkArray);
+                offset += BUFFER_SIZE;
+                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                progressBar.style.width = percent + "%"; progressPercent.textContent = percent + "%";
+                await new Promise(r => setTimeout(r, 0));
+            }
             const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
-            currentProcessedBlob = new Blob([finalBuffer]); 
-            currentProcessedName = finalName;
-            
-            progressBar.style.width = '100%';
+            currentProcessedBlob = new Blob(chunks); currentProcessedName = finalName;
             log("Encryption Complete! Ready to save.", "success");
             switchToSaveMode(); saveProcessedFile();
         }
 
         async function decryptFile(file, password) {
-            log("Starting AES-256 Decryption...");
+            log("Starting File Decryption...");
+            const passwordLength = password.length; let keyIndex = 0; let offset = 0;
+            const sigBlob = file.slice(0, BRANDING.length); const sigText = await sigBlob.text();
+            if(sigText !== BRANDING) throw new Error("Invalid branding signature."); offset += BRANDING.length;
+            const saltBlob = file.slice(offset, offset + 8); const salt = await saltBlob.text(); offset += 8;
+            const hashBlob = file.slice(offset, offset + 8); const hashBuf = await hashBlob.arrayBuffer();
+            const storedHash = new DataView(hashBuf).getBigUint64(0, true); offset += 8;
+            const inputHash = simpleHash(password + salt);
+            if(inputHash !== storedHash) throw new Error("ACCESS DENIED: Incorrect Password.");
+            log("Password Verified. Access Granted.", "success");
+
+            // SHOW PROGRESS HERE (Only after password verification success)
             progressContainer.classList.remove('hidden');
-            progressBar.style.width = '10%';
 
-            // 1. Read File
-            const fileBuffer = await file.arrayBuffer();
-            const fileBytes = new Uint8Array(fileBuffer);
-            
-            // 2. Parse Header
-            let offset = 0;
-            // Skip Branding (already checked)
-            offset += BRANDING_BYTES.length;
-            
-            const salt = fileBytes.slice(offset, offset + SALT_LEN);
-            offset += SALT_LEN;
-            
-            const iv = fileBytes.slice(offset, offset + IV_LEN);
-            offset += IV_LEN;
-            
-            const ciphertext = fileBytes.slice(offset);
-            progressBar.style.width = '30%';
+            const lenBlob = file.slice(offset, offset + 1); const lenArr = new Uint8Array(await lenBlob.arrayBuffer()); offset += 1;
+            const keyChar = password.charCodeAt(keyIndex % passwordLength); const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256; keyIndex++;
+            const extBlob = file.slice(offset, offset + extLen); const extArr = new Uint8Array(await extBlob.arrayBuffer()); offset += extLen;
+            const decryptedExtBytes = new Uint8Array(extLen);
+            for(let i=0; i<extLen; i++) { const k = password.charCodeAt(keyIndex % passwordLength); const rollingKey = (k + keyIndex) % 256; decryptedExtBytes[i] = extArr[i] ^ rollingKey; keyIndex++; }
+            const extension = new TextDecoder().decode(decryptedExtBytes); log(`Restored Extension: ${extension}`);
 
-            // 3. Derive Key & Decrypt
-            const key = await deriveKey(password, salt);
-            let decryptedBuffer;
-            try {
-                decryptedBuffer = await window.crypto.subtle.decrypt(
-                    { name: ALGO_NAME, iv: iv }, key, ciphertext
-                );
-            } catch(e) {
-                throw new Error("ACCESS DENIED: Incorrect Password or File Tampered.");
+            const chunks = []; const totalSize = file.size;
+            while(offset < totalSize) {
+                offset += BRANDING.length; if(offset >= totalSize) break;
+                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE); const chunkBuf = await chunkSlice.arrayBuffer(); const chunkArray = new Uint8Array(chunkBuf);
+                for(let i=0; i<chunkArray.length; i++) { const pIndex = keyIndex % passwordLength; const baseKey = password.charCodeAt(pIndex); const rollingKey = (baseKey + keyIndex) % 256; chunkArray[i] = chunkArray[i] ^ rollingKey; keyIndex++; }
+                chunks.push(chunkArray); offset += chunkArray.length;
+                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                progressBar.style.width = percent + "%"; progressPercent.textContent = percent + "%";
+                await new Promise(r => setTimeout(r, 0));
             }
-            progressBar.style.width = '80%';
-            log("Password Verified. Integrity Checked.", "success");
-
-            // 4. Unpack: [ExtLen][Ext][FileBytes]
-            const decryptedBytes = new Uint8Array(decryptedBuffer);
-            const extLen = decryptedBytes[0];
-            const extBytes = decryptedBytes.slice(1, 1 + extLen);
-            const fileContent = decryptedBytes.slice(1 + extLen);
-            
-            const extension = new TextDecoder().decode(extBytes);
-            log(`Restored Extension: ${extension}`);
-            
-            let originalName = file.name;
-            if (originalName.endsWith(EXTENSION)) originalName = originalName.slice(0, -EXTENSION.length);
-            originalName += extension;
-
-            currentProcessedBlob = new Blob([fileContent]); 
-            currentProcessedName = originalName;
-            
-            progressBar.style.width = '100%';
+            let originalName = file.name; if (originalName.endsWith(EXTENSION)) originalName = originalName.slice(0, -EXTENSION.length); originalName += extension;
+            currentProcessedBlob = new Blob(chunks); currentProcessedName = originalName;
             log("Decryption Complete! Ready to save.", "success");
             switchToSaveMode(); saveProcessedFile();
         }
