@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>NX-Crypt | Tamper Proof Secure Tool</title>
+        <title>NX-Crypt | Secure File & Text Tool</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -11,6 +11,7 @@
             @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap'); body {
                 font-family: 'Space Grotesk', sans-serif;
                 background-color: #000000;
+                /* Pure Pitch Dark */
                 color: #fff;
                 overflow-x: hidden;
                 margin: 0;
@@ -93,6 +94,7 @@
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             }
 
+            /* --- MAGIC ANIMATIONS --- */
             @keyframes shimmer {
                 0% {
                     background-position: 0% 50%;
@@ -107,6 +109,7 @@
                 }
             }
 
+            /* Credit Badge */
             .credit-badge {
                 transition: all 0.3s ease;
                 background: rgba(255, 255, 255, 0.1);
@@ -123,6 +126,7 @@
                 transform: scale(1.02);
             }
 
+            /* Drop Zone */
             .drop-zone {
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 background: rgba(255, 255, 255, 0.05);
@@ -136,6 +140,7 @@
                 box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
             }
 
+            /* Inputs */
             .glass-input {
                 background: rgba(255, 255, 255, 0.05);
                 backdrop-filter: blur(12px);
@@ -165,6 +170,7 @@
                 color: rgba(255, 255, 255, 0.4);
             }
 
+            /* Buttons */
             .action-btn {
                 background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
                 box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
@@ -176,6 +182,7 @@
                 filter: brightness(1.2);
             }
 
+            /* Tab Buttons */
             .tab-btn {
                 background: rgba(255, 255, 255, 0.05);
                 color: #9ca3af;
@@ -200,6 +207,7 @@
                 color: white;
             }
 
+            /* --- Premium Custom Scrollbar --- */
             .custom-scroll {
                 overflow-y: auto;
                 overflow-x: hidden;
@@ -252,7 +260,7 @@
             <div class="text-center mb-6 md:mb-8">
                 <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">NX-Crypt
             </h1>
-                <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Tamper Proof Secure Encryption Tool</p>
+                <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Smart Secure Tool</p>
                 <a href="https://github.com/nullyex" target="_blank" class="credit-badge mt-2 inline-block px-3 py-1 md:px-4 md:py-1 rounded-full bg-white/10 border border-white/10 text-[10px] md:text-xs text-gray-300 font-semibold tracking-wider hover:bg-white/20 hover:text-white transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">By NullYex Team • B.Tech AI&DS (IBM)
             </a>
             </div>
@@ -311,7 +319,8 @@
                 </div>
                 <div id="textOutputContainer" class="hidden mb-4">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="block text-green-400 text-[10px] md:text-xs font-bold uppercase tracking-wide">Result</label>
+                        <label class="block text-green-400 text-[10px] md:text-xs font-bold uppercase tracking-wide">Result
+                    </label>
                         <div class="flex items-center gap-2">
                             <span id="copyFeedback" class="text-white text-[10px] md:text-xs font-bold uppercase hidden animate-pulse">Copied!</span>
                             <button onclick="copyTextOutput()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-2 border border-white/10">
@@ -337,7 +346,8 @@
                 </div>
             </div>
             <div class="flex flex-col gap-3">
-                <button id="processBtn" class="action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none bg-gray-800" disabled>Waiting...</button>
+                <button id="processBtn" class="action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none bg-gray-800" disabled>Waiting...
+            </button>
                 <button id="resetBtn" class="secondary-btn w-full py-3 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm tracking-wide transform transition hidden" onclick="resetApp()">
                     <i class="fas fa-redo mr-2"></i>
                     Reset
@@ -361,21 +371,23 @@
             const EXTENSION = ".NullYex";
             const BRANDING = "By_NullYex";
             const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
-            const HASH_SIZE = 8;
 
+            // Random Emoji List for Encrypted Files
             const MYSTERY_EMOJIS = ['🔒', '🔐', '🤐', '💀', '🙈', '🤦‍♀️', '🕵️', '🧩', '😂', '🎲', '🌀', '🔮', '🎭', '👻', '👽', '🤖', '👾', '🐉', '🌚', '🗿', '🤫', '🏴‍☠️'];
 
             // --- MOUSE BLOB LOGIC ---
             const mouseBlob = document.getElementById('mouse-blob');
-            let mouseX = window.innerWidth / 2
-              , mouseY = window.innerHeight / 2;
-            let blobX = mouseX
-              , blobY = mouseY;
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let blobX = mouseX;
+            let blobY = mouseY;
+
             document.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
             }
             );
+
             function animateBlob() {
                 blobX += (mouseX - blobX) * 0.1;
                 blobY += (mouseY - blobY) * 0.1;
@@ -445,6 +457,7 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
             }
 
+            // --- TAB SWITCHING ---
             function switchTab(mode) {
                 currentMode = mode;
                 if (mode === 'file') {
@@ -452,6 +465,7 @@
                     tabText.classList.remove('active');
                     fileSection.classList.remove('hidden');
                     textSection.classList.add('hidden');
+
                     if (currentProcessedBlob) {
                         switchToSaveMode();
                         controlsArea.classList.add('opacity-50', 'pointer-events-none');
@@ -465,6 +479,7 @@
                     tabFile.classList.remove('active');
                     textSection.classList.remove('hidden');
                     fileSection.classList.add('hidden');
+
                     controlsArea.classList.remove('opacity-50', 'pointer-events-none');
                     resetBtn.classList.add('hidden');
                     updateTextBtnState();
@@ -472,6 +487,7 @@
                 log(`Switched to ${mode.toUpperCase()} Mode.`);
             }
 
+            // --- RESET ---
             function resetApp() {
                 selectedFile = null;
                 isEncrypted = false;
@@ -482,6 +498,7 @@
                 textInput.value = '';
                 textOutput.value = '';
                 textOutputContainer.classList.add('hidden');
+
                 dropContent.classList.remove('hidden');
                 fileInfo.classList.add('hidden');
                 controlsArea.classList.remove('opacity-50', 'pointer-events-none');
@@ -489,8 +506,12 @@
                 progressBar.style.width = '0%';
                 progressPercent.textContent = '0%';
                 resetBtn.classList.add('hidden');
+
+                // Reset Icon
                 fileIcon.className = "fas fa-file text-3xl md:text-4xl text-white";
                 fileIcon.textContent = "";
+                // Clear emoji
+
                 if (currentMode === 'file')
                     updateFileBtnState();
                 else
@@ -498,51 +519,106 @@
                 log("System Reset.");
             }
 
+            // --- ICON HELPER ---
             function getIconForFile(filename) {
                 if (filename.endsWith(EXTENSION))
                     return 'fa-file-shield';
+                // Default encrypted
                 const ext = filename.split('.').pop().toLowerCase();
-                if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext))
+                switch (ext) {
+                case 'png':
+                case 'jpg':
+                case 'jpeg':
+                case 'gif':
+                case 'webp':
+                case 'svg':
                     return 'fa-file-image';
-                if (['mp4', 'mkv', 'avi'].includes(ext))
+                case 'mp4':
+                case 'mkv':
+                case 'avi':
+                case 'mov':
+                case 'webm':
                     return 'fa-file-video';
-                if (['zip', 'rar', '7z'].includes(ext))
+                case 'mp3':
+                case 'wav':
+                case 'ogg':
+                case 'flac':
+                    return 'fa-file-audio';
+                case 'zip':
+                case 'rar':
+                case '7z':
+                case 'tar':
+                case 'gz':
                     return 'fa-file-archive';
-                return 'fa-file';
+                case 'txt':
+                case 'md':
+                case 'c':
+                case 'cpp':
+                case 'py':
+                case 'js':
+                case 'html':
+                case 'css':
+                    return 'fa-file-code';
+                case 'pdf':
+                    return 'fa-file-pdf';
+                case 'doc':
+                case 'docx':
+                    return 'fa-file-word';
+                case 'xls':
+                case 'xlsx':
+                    return 'fa-file-excel';
+                case 'ppt':
+                case 'pptx':
+                    return 'fa-file-powerpoint';
+                default:
+                    return 'fa-file';
+                }
             }
 
+            // --- FILE HANDLE ---
             async function handleFile(file) {
                 selectedFile = file;
                 dropContent.classList.add('hidden');
                 fileInfo.classList.remove('hidden');
                 fileNameEl.textContent = file.name;
                 fileSizeEl.textContent = formatBytes(file.size);
+
+                // Reset emoji state for standard file check
                 fileIcon.textContent = '';
+
                 const headerSlice = file.slice(0, BRANDING_BYTES.length);
                 const headerBuffer = await headerSlice.arrayBuffer();
                 const headerText = new TextDecoder().decode(headerBuffer);
+
                 controlsArea.classList.remove('opacity-50', 'pointer-events-none');
 
                 if (headerText === BRANDING) {
                     isEncrypted = true;
                     detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span> ENCRYPTED';
                     detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-pink-900/20 text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]";
+
+                    // RANDOM EMOJI FOR ENCRYPTED FILE
                     const randomEmoji = MYSTERY_EMOJIS[Math.floor(Math.random() * MYSTERY_EMOJIS.length)];
                     fileIcon.className = "text-4xl md:text-5xl not-italic leading-none filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]";
                     fileIcon.textContent = randomEmoji;
+
                     updateFileBtnState();
                     log(`Detected Signature. Mode: DECRYPT`);
                 } else {
                     isEncrypted = false;
                     detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span> STANDARD FILE';
                     detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-green-900/20 text-green-300 border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]";
+
+                    // STANDARD ICON
                     const iconClass = getIconForFile(file.name);
                     fileIcon.className = `fas ${iconClass} text-3xl md:text-4xl text-white`;
+
                     updateFileBtnState();
                     log("Standard file. Mode: ENCRYPT");
                 }
             }
 
+            // --- UI STATES ---
             function updateFileBtnState() {
                 if (!selectedFile) {
                     processBtn.textContent = "Waiting for file...";
@@ -593,7 +669,7 @@
                 }
             }
 
-            // --- CRYPTO (XOR + DJB2 for Integrity) ---
+            // --- CRYPTO (Same as before) ---
             function generateSalt(length) {
                 const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
                 let salt = "";
@@ -611,6 +687,144 @@
                 return hash;
             }
 
+            // --- TEXT PROCESSING ---
+            async function startTextProcessing() {
+                const password = passwordInput.value;
+                if (!password) {
+                    log("Error: Password cannot be empty!", "error");
+                    return;
+                }
+                const text = textInput.value.trim();
+                if (!text)
+                    return;
+
+                if (isTextEncrypted) {
+                    try {
+                        const rawData = atob(text);
+                        const buffer = new Uint8Array(rawData.length);
+                        for (let i = 0; i < rawData.length; i++)
+                            buffer[i] = rawData.charCodeAt(i);
+
+                        let offset = 0;
+                        const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
+                        if (brandingCheck !== BRANDING)
+                            throw new Error("Invalid Branding");
+                        offset += BRANDING_BYTES.length;
+
+                        const saltBytes = buffer.slice(offset, offset + 8);
+                        const salt = new TextDecoder().decode(saltBytes);
+                        offset += 8;
+
+                        const hashBytes = buffer.slice(offset, offset + 8);
+                        const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
+                        offset += 8;
+
+                        const inputHash = simpleHash(password + salt);
+                        if (inputHash !== storedHash)
+                            throw new Error("Incorrect Password");
+
+                        const passwordLength = password.length;
+                        let keyIndex = 0;
+                        const lenByte = buffer[offset];
+                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                        const extLen = lenByte ^ (keyChar + keyIndex) % 256;
+                        keyIndex++;
+                        offset += 1;
+                        for (let i = 0; i < extLen; i++)
+                            keyIndex++;
+                        offset += extLen;
+
+                        const body = buffer.slice(offset);
+                        for (let i = 0; i < body.length; i++) {
+                            const pIndex = keyIndex % passwordLength;
+                            const baseKey = password.charCodeAt(pIndex);
+                            const rollingKey = (baseKey + keyIndex) % 256;
+                            body[i] = body[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        textOutput.value = new TextDecoder().decode(body);
+                        textOutputContainer.classList.remove('hidden');
+                        log("Message Decrypted!", "success");
+                    } catch (e) {
+                        log("Decryption Failed: " + e.message, "error");
+                    }
+                } else {
+                    try {
+                        const passwordLength = password.length;
+                        let keyIndex = 0;
+                        const parts = [];
+                        parts.push(BRANDING_BYTES);
+                        const salt = generateSalt(8);
+                        parts.push(new TextEncoder().encode(salt));
+                        const passHash = simpleHash(password + salt);
+                        const hashBuffer = new ArrayBuffer(8);
+                        new DataView(hashBuffer).setBigUint64(0, passHash, true);
+                        parts.push(new Uint8Array(hashBuffer));
+                        const extBytes = new TextEncoder().encode(".txt");
+                        const extLen = extBytes.length;
+                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                        const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
+                        parts.push(new Uint8Array([encryptedLen]));
+                        keyIndex++;
+                        const encryptedExt = new Uint8Array(extLen);
+                        for (let i = 0; i < extLen; i++) {
+                            const k = password.charCodeAt(keyIndex % passwordLength);
+                            const rollingKey = (k + keyIndex) % 256;
+                            encryptedExt[i] = extBytes[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        parts.push(encryptedExt);
+                        const body = new TextEncoder().encode(text);
+                        for (let i = 0; i < body.length; i++) {
+                            const pIndex = keyIndex % passwordLength;
+                            const baseKey = password.charCodeAt(pIndex);
+                            const rollingKey = (baseKey + keyIndex) % 256;
+                            body[i] = body[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        parts.push(body);
+
+                        const totalLength = parts.reduce( (acc, curr) => acc + curr.length, 0);
+                        const merged = new Uint8Array(totalLength);
+                        let offset = 0;
+                        for (let p of parts) {
+                            merged.set(p, offset);
+                            offset += p.length;
+                        }
+                        let binary = '';
+                        const len = merged.byteLength;
+                        for (let i = 0; i < len; i++)
+                            binary += String.fromCharCode(merged[i]);
+                        textOutput.value = btoa(binary);
+                        textOutputContainer.classList.remove('hidden');
+                        copyTextOutput();
+                        log("Message Encrypted & Copied!", "success");
+                    } catch (e) {
+                        log("Encryption Failed: " + e.message, "error");
+                    }
+                }
+            }
+
+            function copyTextOutput() {
+                const output = document.getElementById('textOutput');
+                // Use old school execCommand which is generally supported in iframes where clipboard API is blocked
+                output.select();
+                output.setSelectionRange(0, 99999);
+                /* For mobile devices */
+                try {
+                    document.execCommand('copy');
+                    const feedback = document.getElementById('copyFeedback');
+                    feedback.classList.remove('hidden');
+                    setTimeout( () => feedback.classList.add('hidden'), 2000);
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                // Deselect
+                window.getSelection().removeAllRanges();
+                output.blur();
+            }
+
+            // --- FILE PROCESSING ---
             async function startFileProcessing() {
                 const password = passwordInput.value;
                 if (!password) {
@@ -637,182 +851,109 @@
                         progressContainer.classList.add('hidden');
                         progressBar.style.width = '0%';
                     }
-                    , 1500);
+                    , 670);
                 }
             }
 
-            // --- FILE ENCRYPTION (TAMPER PROOF) ---
             async function encryptFile(file, password) {
                 log("Starting File Encryption...");
+
+                // SHOW PROGRESS HERE (Starts only when processing actually begins)
                 progressContainer.classList.remove('hidden');
-                let tamperHash = 5381n;
-                // Rolling Hash
 
                 const passwordLength = password.length;
                 let keyIndex = 0;
                 const chunks = [];
-
-                // Header
                 chunks.push(BRANDING_BYTES);
-                for (let i = 0; i < BRANDING_BYTES.length; i++) {
-                    const val = BigInt(BRANDING_BYTES[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
-
                 const salt = generateSalt(8);
-                const saltBytes = new TextEncoder().encode(salt);
-                chunks.push(saltBytes);
-                for (let i = 0; i < saltBytes.length; i++) {
-                    const val = BigInt(saltBytes[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
-
+                chunks.push(new TextEncoder().encode(salt));
                 const passHash = simpleHash(password + salt);
                 const hashBuffer = new ArrayBuffer(8);
                 new DataView(hashBuffer).setBigUint64(0, passHash, true);
-                const hashBytes = new Uint8Array(hashBuffer);
-                chunks.push(hashBytes);
-                for (let i = 0; i < hashBytes.length; i++) {
-                    const val = BigInt(hashBytes[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
-
-                // Extension
+                chunks.push(new Uint8Array(hashBuffer));
                 const dotIndex = file.name.lastIndexOf('.');
                 const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
                 const extBytes = new TextEncoder().encode(ext);
                 const extLen = extBytes.length;
                 const keyChar = password.charCodeAt(keyIndex % passwordLength);
                 const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-                const lenByteArr = new Uint8Array([encryptedLen]);
-                chunks.push(lenByteArr);
-                // Hash the length byte
-                const valLen = BigInt(lenByteArr[0]);
-                tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
-                tamperHash = BigInt.asUintN(64, tamperHash);
-
+                chunks.push(new Uint8Array([encryptedLen]));
                 keyIndex++;
-
                 const encryptedExt = new Uint8Array(extLen);
                 for (let i = 0; i < extLen; i++) {
                     const k = password.charCodeAt(keyIndex % passwordLength);
                     const rollingKey = (k + keyIndex) % 256;
                     encryptedExt[i] = extBytes[i] ^ rollingKey;
-                    // Integrity
-                    const val = BigInt(encryptedExt[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
                     keyIndex++;
                 }
                 chunks.push(encryptedExt);
 
-                // Body Processing
                 const totalSize = file.size;
                 let offset = 0;
                 const startTime = performance.now();
+                // Start timer
 
                 while (offset < totalSize) {
                     const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
                     const chunkBuffer = await chunkSlice.arrayBuffer();
                     const chunkArray = new Uint8Array(chunkBuffer);
-
+                    chunks.push(BRANDING_BYTES);
                     for (let i = 0; i < chunkArray.length; i++) {
                         const pIndex = keyIndex % passwordLength;
                         const baseKey = password.charCodeAt(pIndex);
                         const rollingKey = (baseKey + keyIndex) % 256;
                         chunkArray[i] = chunkArray[i] ^ rollingKey;
-                        // Integrity
-                        const val = BigInt(chunkArray[i]);
-                        tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                        tamperHash = BigInt.asUintN(64, tamperHash);
                         keyIndex++;
                     }
                     chunks.push(chunkArray);
                     offset += BUFFER_SIZE;
 
+                    // Speed Calculation
                     const percent = Math.min(100, Math.round((offset / totalSize) * 100));
                     const elapsed = (performance.now() - startTime) / 1000;
                     const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
 
                     progressBar.style.width = percent + "%";
                     progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+
                     await new Promise(r => setTimeout(r, 0));
                 }
-
-                // Footer (Tamper Hash)
-                const tamperBuf = new ArrayBuffer(8);
-                new DataView(tamperBuf).setBigUint64(0, tamperHash, true);
-                chunks.push(new Uint8Array(tamperBuf));
-
                 const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
                 currentProcessedBlob = new Blob(chunks);
                 currentProcessedName = finalName;
-                log("Encryption Complete! Integrity Locked.", "success");
+                log("Encryption Complete! Ready to save.", "success");
                 switchToSaveMode();
                 saveProcessedFile();
             }
 
-            // --- FILE DECRYPTION (TAMPER PROOF) ---
             async function decryptFile(file, password) {
                 log("Starting File Decryption...");
                 const passwordLength = password.length;
                 let keyIndex = 0;
                 let offset = 0;
-                let tamperHash = 5381n;
-
-                // Read Header
                 const sigBlob = file.slice(0, BRANDING.length);
                 const sigText = await sigBlob.text();
-                const sigBytes = new TextEncoder().encode(sigText);
-                for (let i = 0; i < sigBytes.length; i++) {
-                    const val = BigInt(sigBytes[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
-
                 if (sigText !== BRANDING)
-                    throw new Error("Invalid File Signature (Not an NX-Crypt file).");
+                    throw new Error("Invalid branding signature.");
                 offset += BRANDING.length;
-
                 const saltBlob = file.slice(offset, offset + 8);
                 const salt = await saltBlob.text();
-                const saltBytes = new TextEncoder().encode(salt);
-                for (let i = 0; i < saltBytes.length; i++) {
-                    const val = BigInt(saltBytes[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
                 offset += 8;
-
                 const hashBlob = file.slice(offset, offset + 8);
                 const hashBuf = await hashBlob.arrayBuffer();
-                const hashBytes = new Uint8Array(hashBuf);
-                for (let i = 0; i < hashBytes.length; i++) {
-                    const val = BigInt(hashBytes[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                }
-
                 const storedHash = new DataView(hashBuf).getBigUint64(0, true);
                 offset += 8;
                 const inputHash = simpleHash(password + salt);
                 if (inputHash !== storedHash)
-                    throw new Error("ACCESS DENIED: Wrong Password!");
-                log("Password Verified. Checking Integrity...", "success");
+                    throw new Error("ACCESS DENIED: Incorrect Password.");
+                log("Password Verified. Access Granted.", "success");
 
+                // SHOW PROGRESS HERE (Only after password verification success)
                 progressContainer.classList.remove('hidden');
 
                 const lenBlob = file.slice(offset, offset + 1);
                 const lenArr = new Uint8Array(await lenBlob.arrayBuffer());
                 offset += 1;
-                // Hash Len Byte
-                const valLen = BigInt(lenArr[0]);
-                tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
-                tamperHash = BigInt.asUintN(64, tamperHash);
-
                 const keyChar = password.charCodeAt(keyIndex % passwordLength);
                 const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256;
                 keyIndex++;
@@ -820,12 +961,7 @@
                 const extArr = new Uint8Array(await extBlob.arrayBuffer());
                 offset += extLen;
                 const decryptedExtBytes = new Uint8Array(extLen);
-
                 for (let i = 0; i < extLen; i++) {
-                    const val = BigInt(extArr[i]);
-                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                    tamperHash = BigInt.asUintN(64, tamperHash);
-                    // Calc Integrity on Encrypted Data
                     const k = password.charCodeAt(keyIndex % passwordLength);
                     const rollingKey = (k + keyIndex) % 256;
                     decryptedExtBytes[i] = extArr[i] ^ rollingKey;
@@ -836,22 +972,17 @@
 
                 const chunks = [];
                 const totalSize = file.size;
-                const footerOffset = totalSize - 8;
                 const startTime = performance.now();
+                // Start timer
 
-                while (offset < footerOffset) {
-                    let readSize = BUFFER_SIZE;
-                    if (offset + readSize > footerOffset)
-                        readSize = footerOffset - offset;
-                    const chunkSlice = file.slice(offset, offset + readSize);
+                while (offset < totalSize) {
+                    offset += BRANDING.length;
+                    if (offset >= totalSize)
+                        break;
+                    const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
                     const chunkBuf = await chunkSlice.arrayBuffer();
                     const chunkArray = new Uint8Array(chunkBuf);
-
                     for (let i = 0; i < chunkArray.length; i++) {
-                        const val = BigInt(chunkArray[i]);
-                        tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                        tamperHash = BigInt.asUintN(64, tamperHash);
-                        // Integrity
                         const pIndex = keyIndex % passwordLength;
                         const baseKey = password.charCodeAt(pIndex);
                         const rollingKey = (baseKey + keyIndex) % 256;
@@ -861,23 +992,16 @@
                     chunks.push(chunkArray);
                     offset += chunkArray.length;
 
+                    // Speed Calculation
                     const percent = Math.min(100, Math.round((offset / totalSize) * 100));
                     const elapsed = (performance.now() - startTime) / 1000;
                     const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
 
                     progressBar.style.width = percent + "%";
                     progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+
                     await new Promise(r => setTimeout(r, 0));
                 }
-
-                const footerBlob = file.slice(footerOffset, totalSize);
-                const footerBuf = await footerBlob.arrayBuffer();
-                const fileTamperHash = new DataView(footerBuf).getBigUint64(0, true);
-
-                if (tamperHash !== fileTamperHash)
-                    throw new Error("CRITICAL: Integrity Check Failed (File Tampered)!");
-                log("Integrity Verified.", "success");
-
                 let originalName = file.name;
                 if (originalName.endsWith(EXTENSION))
                     originalName = originalName.slice(0, -EXTENSION.length);
@@ -887,199 +1011,6 @@
                 log("Decryption Complete! Ready to save.", "success");
                 switchToSaveMode();
                 saveProcessedFile();
-            }
-
-            // --- TEXT PROCESSING (TAMPER PROOF) ---
-            async function startTextProcessing() {
-                const password = passwordInput.value;
-                if (!password) {
-                    log("Error: Password cannot be empty!", "error");
-                    return;
-                }
-                const text = textInput.value.trim();
-                if (!text)
-                    return;
-
-                if (isTextEncrypted) {
-                    try {
-                        const rawData = atob(text);
-                        const buffer = new Uint8Array(rawData.length);
-                        for (let i = 0; i < rawData.length; i++)
-                            buffer[i] = rawData.charCodeAt(i);
-
-                        // 1. INTEGRITY SCAN FIRST (Priority)
-                        const dataLen = buffer.length - 8;
-                        if (dataLen < 0)
-                            throw new Error("Invalid Code Format (Too Short).");
-
-                        let tamperHash = 5381n;
-                        for (let i = 0; i < dataLen; i++) {
-                            const val = BigInt(buffer[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                        }
-
-                        const footerBytes = buffer.slice(dataLen);
-                        const expectedTamperHash = new DataView(footerBytes.buffer).getBigUint64(0, true);
-
-                        if (tamperHash !== expectedTamperHash)
-                            throw new Error("CRITICAL: Integrity Check Failed (Code Tampered)!");
-
-                        // 2. PARSE & DECRYPT
-                        let offset = 0;
-                        const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
-                        if (brandingCheck !== BRANDING)
-                            throw new Error("Invalid Code Signature.");
-                        offset += BRANDING_BYTES.length;
-
-                        const saltBytes = buffer.slice(offset, offset + 8);
-                        const salt = new TextDecoder().decode(saltBytes);
-                        offset += 8;
-                        const hashBytes = buffer.slice(offset, offset + 8);
-                        const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
-                        offset += 8;
-
-                        const inputHash = simpleHash(password + salt);
-                        if (inputHash !== storedHash)
-                            throw new Error("ACCESS DENIED: Wrong Password!");
-
-                        const passwordLength = password.length;
-                        let keyIndex = 0;
-
-                        const lenByte = buffer[offset];
-                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
-                        const extLen = lenByte ^ (keyChar + keyIndex) % 256;
-                        keyIndex++;
-                        offset += 1;
-
-                        // Skip Extension (Decrypt dummy ext)
-                        const extBytes = buffer.slice(offset, offset + extLen);
-                        for (let i = 0; i < extLen; i++) {
-                            keyIndex++;
-                        }
-                        offset += extLen;
-
-                        // Decrypt Body
-                        const bodyEnc = buffer.slice(offset, dataLen);
-                        const bodyDec = new Uint8Array(bodyEnc.length);
-
-                        for (let i = 0; i < bodyEnc.length; i++) {
-                            const pIndex = keyIndex % passwordLength;
-                            const baseKey = password.charCodeAt(pIndex);
-                            const rollingKey = (baseKey + keyIndex) % 256;
-                            bodyDec[i] = bodyEnc[i] ^ rollingKey;
-                            keyIndex++;
-                        }
-
-                        textOutput.value = new TextDecoder().decode(bodyDec);
-                        textOutputContainer.classList.remove('hidden');
-                        log("Message Decrypted! Integrity Verified.", "success");
-                    } catch (e) {
-                        log(e.message, "error");
-                    }
-                } else {
-                    // ENCRYPT TEXT
-                    try {
-                        let tamperHash = 5381n;
-                        // Rolling Hash
-                        const passwordLength = password.length;
-                        let keyIndex = 0;
-                        const parts = [];
-
-                        // Header
-                        parts.push(BRANDING_BYTES);
-                        for (let i = 0; i < BRANDING_BYTES.length; i++) {
-                            const val = BigInt(BRANDING_BYTES[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                        }
-
-                        const salt = generateSalt(8);
-                        const saltBytes = new TextEncoder().encode(salt);
-                        parts.push(saltBytes);
-                        for (let i = 0; i < saltBytes.length; i++) {
-                            const val = BigInt(saltBytes[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                        }
-
-                        const passHash = simpleHash(password + salt);
-                        const hashBuffer = new ArrayBuffer(8);
-                        new DataView(hashBuffer).setBigUint64(0, passHash, true);
-                        const hashBytes = new Uint8Array(hashBuffer);
-                        parts.push(hashBytes);
-                        for (let i = 0; i < hashBytes.length; i++) {
-                            const val = BigInt(hashBytes[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                        }
-
-                        // Extension
-                        const extBytes = new TextEncoder().encode(".txt");
-                        const extLen = extBytes.length;
-                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
-                        const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-                        const lenByteArr = new Uint8Array([encryptedLen]);
-                        parts.push(lenByteArr);
-                        // Hash Len Byte
-                        const valLen = BigInt(lenByteArr[0]);
-                        tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
-                        tamperHash = BigInt.asUintN(64, tamperHash);
-                        keyIndex++;
-
-                        const encryptedExt = new Uint8Array(extLen);
-                        for (let i = 0; i < extLen; i++) {
-                            const k = password.charCodeAt(keyIndex % passwordLength);
-                            const rollingKey = (k + keyIndex) % 256;
-                            encryptedExt[i] = extBytes[i] ^ rollingKey;
-                            // Integrity
-                            const val = BigInt(encryptedExt[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                            keyIndex++;
-                        }
-                        parts.push(encryptedExt);
-
-                        // Body
-                        const body = new TextEncoder().encode(text);
-                        const bodyEnc = new Uint8Array(body.length);
-                        for (let i = 0; i < body.length; i++) {
-                            const pIndex = keyIndex % passwordLength;
-                            const baseKey = password.charCodeAt(pIndex);
-                            const rollingKey = (baseKey + keyIndex) % 256;
-                            bodyEnc[i] = body[i] ^ rollingKey;
-                            // Integrity
-                            const val = BigInt(bodyEnc[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                            keyIndex++;
-                        }
-                        parts.push(bodyEnc);
-
-                        // Footer
-                        const tamperBuf = new ArrayBuffer(8);
-                        new DataView(tamperBuf).setBigUint64(0, tamperHash, true);
-                        parts.push(new Uint8Array(tamperBuf));
-
-                        const totalLength = parts.reduce( (acc, curr) => acc + curr.length, 0);
-                        const merged = new Uint8Array(totalLength);
-                        let offset = 0;
-                        for (let p of parts) {
-                            merged.set(p, offset);
-                            offset += p.length;
-                        }
-                        let binary = '';
-                        const len = merged.byteLength;
-                        for (let i = 0; i < len; i++)
-                            binary += String.fromCharCode(merged[i]);
-                        textOutput.value = btoa(binary);
-                        textOutputContainer.classList.remove('hidden');
-                        copyTextOutput();
-                        log("Message Encrypted!", "success");
-                    } catch (e) {
-                        log("Encryption Failed.", "error");
-                    }
-                }
             }
 
             function switchToSaveMode() {
@@ -1124,20 +1055,6 @@
                 }
             }
 
-            function copyTextOutput() {
-                const output = document.getElementById('textOutput');
-                output.select();
-                output.setSelectionRange(0, 99999);
-                try {
-                    document.execCommand('copy');
-                    const feedback = document.getElementById('copyFeedback');
-                    feedback.classList.remove('hidden');
-                    setTimeout( () => feedback.classList.add('hidden'), 2000);
-                } catch (err) {}
-                window.getSelection().removeAllRanges();
-                output.blur();
-            }
-
             // --- KEYBOARD LISTENERS ---
             passwordInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !processBtn.disabled) {
@@ -1155,7 +1072,7 @@
                 }
             }
             );
-
+            
             // --- EVENTS ---
             dropZone.addEventListener('click', () => fileInput.click());
             dropZone.addEventListener('dragover', (e) => {
