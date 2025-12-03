@@ -191,18 +191,14 @@
 </head>
 <body class="p-2 md:p-4 selection:bg-purple-500 selection:text-white">
 
-    <!-- Interactive Mouse Blob -->
     <div id="mouse-blob"></div>
 
-    <!-- Ambient Blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
 
-    <!-- Main Card -->
     <div class="glass-panel rounded-2xl md:rounded-[2rem] p-5 md:p-10 w-full max-w-2xl relative overflow-hidden backdrop-blur-xl">
         
-        <!-- Header -->
         <div class="text-center mb-6 md:mb-8">
             <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">
                 NX-Crypt
@@ -213,7 +209,6 @@
             </a>
         </div>
 
-        <!-- Mode Tabs -->
         <div class="flex gap-3 md:gap-4 mb-6">
             <button id="tabFile" class="tab-btn active flex-1 py-2 md:py-3 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wide flex items-center justify-center gap-2" onclick="switchTab('file')">
                 <i class="fas fa-file-alt"></i> File Mode
@@ -223,9 +218,7 @@
             </button>
         </div>
 
-        <!-- === FILE SECTION === -->
         <div id="fileSection" class="animate-fade-in">
-            <!-- File Drop Zone -->
             <div id="dropZone" class="drop-zone rounded-2xl md:rounded-3xl p-6 md:p-12 text-center cursor-pointer mb-6 group relative overflow-hidden">
                 <div id="dropContent">
                     <div class="mb-3 md:mb-5 relative inline-block">
@@ -238,7 +231,6 @@
                 
                 <div id="fileInfo" class="hidden animate-fade-in">
                     <div class="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mb-3 md:mb-4 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
-                        <!-- Dynamic Icon -->
                         <i id="fileIcon" class="fas fa-file text-3xl md:text-4xl text-white"></i>
                     </div>
                     <div class="text-base md:text-2xl font-bold truncate px-2 text-white mb-1" id="fileName">filename.ext</div>
@@ -250,7 +242,6 @@
                 <input type="file" id="fileInput" class="hidden">
             </div>
 
-            <!-- File Progress Bar -->
             <div id="progressContainer" class="hidden mb-6">
                 <div class="flex justify-between text-xs text-gray-300 font-medium mb-1">
                     <span id="progressText">Processing...</span>
@@ -262,9 +253,7 @@
             </div>
         </div>
 
-        <!-- === TEXT SECTION === -->
         <div id="textSection" class="hidden animate-fade-in">
-            <!-- Text Input Area -->
             <div class="mb-4">
                 <label class="block text-gray-300 text-[10px] md:text-xs font-bold mb-2 uppercase tracking-wide">Message / Encrypted Code</label>
                 <div class="glass-input w-full rounded-2xl h-40 md:h-44 flex flex-col">
@@ -272,7 +261,6 @@
                 </div>
             </div>
 
-            <!-- Output Area -->
             <div id="textOutputContainer" class="hidden mb-4">
                 <div class="flex justify-between items-center mb-2">
                     <label class="block text-green-400 text-[10px] md:text-xs font-bold uppercase tracking-wide">
@@ -292,7 +280,6 @@
             </div>
         </div>
 
-        <!-- Shared Password Section -->
         <div class="mb-6" id="controlsArea">
             <label class="block text-gray-300 text-xs md:text-sm font-medium mb-2 ml-1 uppercase tracking-wide">Secure Password</label>
             <div class="relative group">
@@ -304,7 +291,6 @@
             </div>
         </div>
 
-        <!-- Action Buttons -->
         <div class="flex flex-col gap-3">
             <button id="processBtn" class="action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none bg-gray-800" disabled>
                 Waiting...
@@ -315,7 +301,6 @@
             </button>
         </div>
 
-        <!-- Log Output -->
         <div class="mt-6">
             <div class="glass-input w-full rounded-xl md:rounded-2xl h-28 md:h-32 flex flex-col bg-black/60">
                 <div class="w-full h-full overflow-y-auto custom-scroll text-fade-mask font-mono text-[10px] md:text-xs shadow-inner p-4" id="consoleLog">
@@ -326,7 +311,6 @@
 
     </div>
 
-    <!-- Logic Script -->
     <script>
         // --- CONSTANTS ---
         const BUFFER_SIZE = 1024 * 1024; 
@@ -715,6 +699,8 @@
             chunks.push(encryptedExt);
 
             const totalSize = file.size; let offset = 0;
+            const startTime = performance.now(); // Start timer
+            
             while (offset < totalSize) {
                 const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
                 const chunkBuffer = await chunkSlice.arrayBuffer();
@@ -723,8 +709,15 @@
                 for (let i = 0; i < chunkArray.length; i++) { const pIndex = keyIndex % passwordLength; const baseKey = password.charCodeAt(pIndex); const rollingKey = (baseKey + keyIndex) % 256; chunkArray[i] = chunkArray[i] ^ rollingKey; keyIndex++; }
                 chunks.push(chunkArray);
                 offset += BUFFER_SIZE;
+                
+                // Speed Calculation
                 const percent = Math.min(100, Math.round((offset / totalSize) * 100));
-                progressBar.style.width = percent + "%"; progressPercent.textContent = percent + "%";
+                const elapsed = (performance.now() - startTime) / 1000;
+                const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
+                
+                progressBar.style.width = percent + "%"; 
+                progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+                
                 await new Promise(r => setTimeout(r, 0));
             }
             const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
@@ -756,13 +749,22 @@
             const extension = new TextDecoder().decode(decryptedExtBytes); log(`Restored Extension: ${extension}`);
 
             const chunks = []; const totalSize = file.size;
+            const startTime = performance.now(); // Start timer
+
             while(offset < totalSize) {
                 offset += BRANDING.length; if(offset >= totalSize) break;
                 const chunkSlice = file.slice(offset, offset + BUFFER_SIZE); const chunkBuf = await chunkSlice.arrayBuffer(); const chunkArray = new Uint8Array(chunkBuf);
                 for(let i=0; i<chunkArray.length; i++) { const pIndex = keyIndex % passwordLength; const baseKey = password.charCodeAt(pIndex); const rollingKey = (baseKey + keyIndex) % 256; chunkArray[i] = chunkArray[i] ^ rollingKey; keyIndex++; }
                 chunks.push(chunkArray); offset += chunkArray.length;
+                
+                // Speed Calculation
                 const percent = Math.min(100, Math.round((offset / totalSize) * 100));
-                progressBar.style.width = percent + "%"; progressPercent.textContent = percent + "%";
+                const elapsed = (performance.now() - startTime) / 1000;
+                const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
+                
+                progressBar.style.width = percent + "%"; 
+                progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+                
                 await new Promise(r => setTimeout(r, 0));
             }
             let originalName = file.name; if (originalName.endsWith(EXTENSION)) originalName = originalName.slice(0, -EXTENSION.length); originalName += extension;
