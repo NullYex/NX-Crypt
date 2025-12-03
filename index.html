@@ -252,7 +252,7 @@
             <div class="text-center mb-6 md:mb-8">
                 <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">NX-Crypt
             </h1>
-                <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Tamper Proof Secure Tool</p>
+                <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Tamper Proof Secure Encryption Tool</p>
                 <a href="https://github.com/nullyex" target="_blank" class="credit-badge mt-2 inline-block px-3 py-1 md:px-4 md:py-1 rounded-full bg-white/10 border border-white/10 text-[10px] md:text-xs text-gray-300 font-semibold tracking-wider hover:bg-white/20 hover:text-white transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">By NullYex Team • B.Tech AI&DS (IBM)
             </a>
             </div>
@@ -653,6 +653,7 @@
                 let keyIndex = 0;
                 const chunks = [];
 
+                // Header
                 chunks.push(BRANDING_BYTES);
                 const salt = generateSalt(8);
                 chunks.push(new TextEncoder().encode(salt));
@@ -661,6 +662,7 @@
                 new DataView(hashBuffer).setBigUint64(0, passHash, true);
                 chunks.push(new Uint8Array(hashBuffer));
 
+                // Extension
                 const dotIndex = file.name.lastIndexOf('.');
                 const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
                 const extBytes = new TextEncoder().encode(ext);
@@ -683,6 +685,7 @@
                 }
                 chunks.push(encryptedExt);
 
+                // Body Processing
                 const totalSize = file.size;
                 let offset = 0;
                 const startTime = performance.now();
@@ -737,7 +740,7 @@
                 const sigBlob = file.slice(0, BRANDING.length);
                 const sigText = await sigBlob.text();
                 if (sigText !== BRANDING)
-                    throw new Error("Invalid branding signature.");
+                    throw new Error("Invalid File Signature (Not an NX-Crypt file).");
                 offset += BRANDING.length;
                 const saltBlob = file.slice(offset, offset + 8);
                 const salt = await saltBlob.text();
@@ -748,7 +751,7 @@
                 offset += 8;
                 const inputHash = simpleHash(password + salt);
                 if (inputHash !== storedHash)
-                    throw new Error("ACCESS DENIED: Incorrect Password.");
+                    throw new Error("ACCESS DENIED: Wrong Password!");
                 log("Password Verified. Checking Integrity...", "success");
 
                 progressContainer.classList.remove('hidden');
@@ -819,7 +822,7 @@
                 const fileTamperHash = new DataView(footerBuf).getBigUint64(0, true);
 
                 if (tamperHash !== fileTamperHash)
-                    throw new Error("CRITICAL ALERT: File has been tampered with!");
+                    throw new Error("CRITICAL: Integrity Check Failed (File Tampered)!");
                 log("Integrity Verified.", "success");
 
                 let originalName = file.name;
@@ -852,21 +855,18 @@
                         // Check footer for Text Integrity
                         const dataLen = buffer.length - 8;
                         if (dataLen < 0)
-                            throw new Error("Invalid Data Format");
+                            throw new Error("Invalid Code Format.");
                         const footerBytes = buffer.slice(dataLen);
                         const expectedTamperHash = new DataView(footerBytes.buffer).getBigUint64(0, true);
 
                         // Decode loop with integrity check
                         let tamperHash = 5381n;
-
-                        // Create view of actual data excluding footer for processing
                         const dataBuffer = buffer.slice(0, dataLen);
 
-                        // Standard decryption logic on dataBuffer...
                         let offset = 0;
                         const brandingCheck = new TextDecoder().decode(dataBuffer.slice(0, BRANDING_BYTES.length));
                         if (brandingCheck !== BRANDING)
-                            throw new Error("Invalid Branding");
+                            throw new Error("Invalid Code Signature.");
                         offset += BRANDING_BYTES.length;
                         const saltBytes = dataBuffer.slice(offset, offset + 8);
                         const salt = new TextDecoder().decode(saltBytes);
@@ -876,7 +876,7 @@
                         offset += 8;
                         const inputHash = simpleHash(password + salt);
                         if (inputHash !== storedHash)
-                            throw new Error("Incorrect Password");
+                            throw new Error("ACCESS DENIED: Wrong Password!");
 
                         const passwordLength = password.length;
                         let keyIndex = 0;
@@ -913,13 +913,13 @@
                         }
 
                         if (tamperHash !== expectedTamperHash)
-                            throw new Error("CRITICAL ALERT: Text Code has been tampered with!");
+                            throw new Error("CRITICAL: Integrity Check Failed (Text Tampered)!");
 
                         textOutput.value = new TextDecoder().decode(body);
                         textOutputContainer.classList.remove('hidden');
                         log("Message Decrypted! Integrity Verified.", "success");
                     } catch (e) {
-                        log("Decryption Failed: " + e.message, "error");
+                        log(e.message, "error");
                     }
                 } else {
                     try {
@@ -1053,6 +1053,25 @@
                 output.blur();
             }
 
+            // --- KEYBOARD LISTENERS ---
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !processBtn.disabled) {
+                    e.preventDefault();
+                    processBtn.click();
+                }
+            }
+            );
+
+            textInput.addEventListener('keydown', (e) => {
+                // Allow Ctrl+Enter to submit from text area
+                if (e.ctrlKey && e.key === 'Enter' && !processBtn.disabled) {
+                    e.preventDefault();
+                    processBtn.click();
+                }
+            }
+            );
+
+            // --- EVENTS ---
             dropZone.addEventListener('click', () => fileInput.click());
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
