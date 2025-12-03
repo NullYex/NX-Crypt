@@ -47,7 +47,8 @@ string generateSalt(int length) {
 //This is a "One-Way" function. You can't turn the number back into the password.
 unsigned long long simpleHash(const string& data) {
     unsigned long long hash = 5381; //Starting number (magic constant)
-    for (char c : data) {
+    //UPDATED: Use unsigned char to match JS logic
+    for (unsigned char c : data) {
         //Mix the bits: (hash * 33) + character
         hash = ((hash<<5) + hash) + c; 
     }
@@ -161,25 +162,29 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         unsigned char extLen = (unsigned char)originalExtension.length();
         
         //Encrypt the length byte
-        char keyChar = password[keyIndex % passwordLength];
-        char encryptedLen = extLen ^ (keyChar + (char)keyIndex);
-        outputFile.put(encryptedLen);
+        //UPDATED: Cast to unsigned char to match JS
+        unsigned char keyChar = (unsigned char)password[keyIndex % passwordLength];
+        unsigned char encryptedLen = extLen ^ (unsigned char)(keyChar + keyIndex);
+        outputFile.put((char)encryptedLen);
         keyIndex++;
 
         //Encrypt the extension letters (e.g., 'p', 'n', 'g')
         for (char c : originalExtension) {
-            char k = password[keyIndex % passwordLength];
-            outputFile.put(c ^ (k + (char)keyIndex));
+            unsigned char uc = (unsigned char)c;
+            unsigned char k = (unsigned char)password[keyIndex % passwordLength];
+            outputFile.put((char)(uc ^ (unsigned char)(k + keyIndex)));
             keyIndex++;
         }
         
         //PROCESS THE FILE BODY
-        vector<char> buffer(BUFFER_SIZE); //1MB Buffer
+        //UPDATED: Use unsigned char buffer to prevent negative numbers
+        vector<unsigned char> buffer(BUFFER_SIZE); //1MB Buffer
         cout<<"Encrypting Please wait..."<<endl;
 
         size_t pIndex = keyIndex % passwordLength; //Optimization variable
 
-        while (inputFile.read(buffer.data(), BUFFER_SIZE) || inputFile.gcount() > 0) {
+        //UPDATED: Cast buffer to char* for reading
+        while (inputFile.read(reinterpret_cast<char*>(buffer.data()), BUFFER_SIZE) || inputFile.gcount() > 0) {
             streamsize bytesRead = inputFile.gcount(); //How many bytes did we actually read?
 
             //Inject Branding Tag periodically (every 1MB)
@@ -188,7 +193,7 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
             //The Encryption Loop
             for (streamsize i = 0; i < bytesRead; ++i) {
                 //1. Get current password character
-                char baseKey = password[pIndex];
+                unsigned char baseKey = (unsigned char)password[pIndex];
                 
                 //Move to next password character (loop back if at end)
                 pIndex++;
@@ -196,14 +201,15 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
 
                 //2. Create Rolling Key: (PasswordChar + CurrentPosition)
                 //This ensures the key changes for every single byte!
-                char rollingKey = baseKey + (char)keyIndex;
+                //UPDATED: Use unsigned math so 255+1 becomes 0 (like JS)
+                unsigned char rollingKey = baseKey + (unsigned char)keyIndex;
                 
                 //3. Perform XOR Operation (The Magic)
                 buffer[i] = buffer[i] ^ rollingKey;
                 keyIndex++;
             }
-            //Write encrypted chunk to file
-            outputFile.write(buffer.data(), bytesRead);
+            //Write encrypted chunk to file (Cast back to char*)
+            outputFile.write(reinterpret_cast<const char*>(buffer.data()), bytesRead);
             if (inputFile.eof()) break;
         }
         outputFile.close();
@@ -281,12 +287,13 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         }
 
         //3. Read Hidden Extension
-        char encryptedLen;
-        inputFile.get(encryptedLen); //Read length byte
+        char encryptedLenChar;
+        inputFile.get(encryptedLenChar); //Read length byte
+        unsigned char encryptedLen = (unsigned char)encryptedLenChar;
 
         //Decrypt length
-        char keyChar = password[keyIndex % passwordLength];
-        unsigned char extLen = encryptedLen ^ (keyChar + (char)keyIndex);
+        unsigned char keyChar = (unsigned char)password[keyIndex % passwordLength];
+        unsigned char extLen = encryptedLen ^ (unsigned char)(keyChar + keyIndex);
         keyIndex++;
 
         //Decrypt extension characters
@@ -294,8 +301,11 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         for (int i = 0; i < extLen; i++) {
             char c;
             inputFile.get(c);
-            char k = password[keyIndex % passwordLength];
-            restoredExtension += (c ^ (k + (char)keyIndex));
+            unsigned char uc = (unsigned char)c;
+            unsigned char k = (unsigned char)password[keyIndex % passwordLength];
+            
+            unsigned char decoded = uc ^ (unsigned char)(k + keyIndex);
+            restoredExtension += (char)decoded;
             keyIndex++;
         }
 
@@ -324,7 +334,8 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
         }
 
         //4. Decrypt Body
-        vector<char> buffer(BUFFER_SIZE);
+        //UPDATED: Use unsigned buffer
+        vector<unsigned char> buffer(BUFFER_SIZE);
         vector<char> brandSkip(BRANDING.size());
         cout<<"Decrypting Please wait..."<<endl;
 
@@ -334,21 +345,22 @@ bool processFile(const string& inputFileName, string password, bool encryptMode)
             //SKIP Branding Tag (It's not part of the original file)
             if (!inputFile.read(brandSkip.data(), BRANDING.size())) break;
 
-            //Read Encrypted Chunk
-            if (inputFile.read(buffer.data(), BUFFER_SIZE) || inputFile.gcount() > 0) {
+            //Read Encrypted Chunk (Cast to char* for reading)
+            if (inputFile.read(reinterpret_cast<char*>(buffer.data()), BUFFER_SIZE) || inputFile.gcount() > 0) {
                 streamsize bytesRead = inputFile.gcount();
 
                 //Decrypt Logic (Same as encryption!)
                 for (streamsize i = 0; i < bytesRead; ++i) {
-                    char baseKey = password[pIndex];
+                    unsigned char baseKey = (unsigned char)password[pIndex];
                     pIndex++;
                     if (pIndex == passwordLength) pIndex = 0;
 
-                    char rollingKey = baseKey + (char)keyIndex;
+                    unsigned char rollingKey = baseKey + (unsigned char)keyIndex;
                     buffer[i] = buffer[i] ^ rollingKey; //XOR reverses the change
                     keyIndex++;
                 }
-                outputFile.write(buffer.data(), bytesRead);
+                //Cast back to const char* for writing
+                outputFile.write(reinterpret_cast<const char*>(buffer.data()), bytesRead);
             }
             if (inputFile.eof()) break;
         }
