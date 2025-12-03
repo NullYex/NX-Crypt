@@ -362,7 +362,6 @@
             const BRANDING = "By_NullYex";
             const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
             const HASH_SIZE = 8;
-            // Size of the tamper hash
 
             const MYSTERY_EMOJIS = ['🔒', '🔐', '🤐', '💀', '🙈', '🤦‍♀️', '🕵️', '🧩', '😂', '🎲', '🌀', '🔮', '🎭', '👻', '👽', '🤖', '👾', '🐉', '🌚', '🗿', '🤫', '🏴‍☠️'];
 
@@ -655,12 +654,31 @@
 
                 // Header
                 chunks.push(BRANDING_BYTES);
+                for (let i = 0; i < BRANDING_BYTES.length; i++) {
+                    const val = BigInt(BRANDING_BYTES[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
+
                 const salt = generateSalt(8);
-                chunks.push(new TextEncoder().encode(salt));
+                const saltBytes = new TextEncoder().encode(salt);
+                chunks.push(saltBytes);
+                for (let i = 0; i < saltBytes.length; i++) {
+                    const val = BigInt(saltBytes[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
+
                 const passHash = simpleHash(password + salt);
                 const hashBuffer = new ArrayBuffer(8);
                 new DataView(hashBuffer).setBigUint64(0, passHash, true);
-                chunks.push(new Uint8Array(hashBuffer));
+                const hashBytes = new Uint8Array(hashBuffer);
+                chunks.push(hashBytes);
+                for (let i = 0; i < hashBytes.length; i++) {
+                    const val = BigInt(hashBytes[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
 
                 // Extension
                 const dotIndex = file.name.lastIndexOf('.');
@@ -669,7 +687,13 @@
                 const extLen = extBytes.length;
                 const keyChar = password.charCodeAt(keyIndex % passwordLength);
                 const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-                chunks.push(new Uint8Array([encryptedLen]));
+                const lenByteArr = new Uint8Array([encryptedLen]);
+                chunks.push(lenByteArr);
+                // Hash the length byte
+                const valLen = BigInt(lenByteArr[0]);
+                tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
+                tamperHash = BigInt.asUintN(64, tamperHash);
+
                 keyIndex++;
 
                 const encryptedExt = new Uint8Array(extLen);
@@ -737,16 +761,41 @@
                 const passwordLength = password.length;
                 let keyIndex = 0;
                 let offset = 0;
+                let tamperHash = 5381n;
+
+                // Read Header
                 const sigBlob = file.slice(0, BRANDING.length);
                 const sigText = await sigBlob.text();
+                const sigBytes = new TextEncoder().encode(sigText);
+                for (let i = 0; i < sigBytes.length; i++) {
+                    const val = BigInt(sigBytes[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
+
                 if (sigText !== BRANDING)
                     throw new Error("Invalid File Signature (Not an NX-Crypt file).");
                 offset += BRANDING.length;
+
                 const saltBlob = file.slice(offset, offset + 8);
                 const salt = await saltBlob.text();
+                const saltBytes = new TextEncoder().encode(salt);
+                for (let i = 0; i < saltBytes.length; i++) {
+                    const val = BigInt(saltBytes[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
                 offset += 8;
+
                 const hashBlob = file.slice(offset, offset + 8);
                 const hashBuf = await hashBlob.arrayBuffer();
+                const hashBytes = new Uint8Array(hashBuf);
+                for (let i = 0; i < hashBytes.length; i++) {
+                    const val = BigInt(hashBytes[i]);
+                    tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                    tamperHash = BigInt.asUintN(64, tamperHash);
+                }
+
                 const storedHash = new DataView(hashBuf).getBigUint64(0, true);
                 offset += 8;
                 const inputHash = simpleHash(password + salt);
@@ -755,11 +804,15 @@
                 log("Password Verified. Checking Integrity...", "success");
 
                 progressContainer.classList.remove('hidden');
-                let tamperHash = 5381n;
 
                 const lenBlob = file.slice(offset, offset + 1);
                 const lenArr = new Uint8Array(await lenBlob.arrayBuffer());
                 offset += 1;
+                // Hash Len Byte
+                const valLen = BigInt(lenArr[0]);
+                tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
+                tamperHash = BigInt.asUintN(64, tamperHash);
+
                 const keyChar = password.charCodeAt(keyIndex % passwordLength);
                 const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256;
                 keyIndex++;
@@ -851,77 +904,81 @@
                     try {
                         const rawData = atob(text);
                         const buffer = new Uint8Array(rawData.length);
+                        for (let i = 0; i < rawData.length; i++)
+                            buffer[i] = rawData.charCodeAt(i);
 
-                        // Check footer for Text Integrity
+                        // 1. INTEGRITY SCAN FIRST (Priority)
                         const dataLen = buffer.length - 8;
                         if (dataLen < 0)
-                            throw new Error("Invalid Code Format.");
+                            throw new Error("Invalid Code Format (Too Short).");
+
+                        let tamperHash = 5381n;
+                        for (let i = 0; i < dataLen; i++) {
+                            const val = BigInt(buffer[i]);
+                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                            tamperHash = BigInt.asUintN(64, tamperHash);
+                        }
+
                         const footerBytes = buffer.slice(dataLen);
                         const expectedTamperHash = new DataView(footerBytes.buffer).getBigUint64(0, true);
 
-                        // Decode loop with integrity check
-                        let tamperHash = 5381n;
-                        const dataBuffer = buffer.slice(0, dataLen);
+                        if (tamperHash !== expectedTamperHash)
+                            throw new Error("CRITICAL: Integrity Check Failed (Code Tampered)!");
 
+                        // 2. PARSE & DECRYPT
                         let offset = 0;
-                        const brandingCheck = new TextDecoder().decode(dataBuffer.slice(0, BRANDING_BYTES.length));
+                        const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
                         if (brandingCheck !== BRANDING)
                             throw new Error("Invalid Code Signature.");
                         offset += BRANDING_BYTES.length;
-                        const saltBytes = dataBuffer.slice(offset, offset + 8);
+
+                        const saltBytes = buffer.slice(offset, offset + 8);
                         const salt = new TextDecoder().decode(saltBytes);
                         offset += 8;
-                        const hashBytes = dataBuffer.slice(offset, offset + 8);
+                        const hashBytes = buffer.slice(offset, offset + 8);
                         const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
                         offset += 8;
+
                         const inputHash = simpleHash(password + salt);
                         if (inputHash !== storedHash)
                             throw new Error("ACCESS DENIED: Wrong Password!");
 
                         const passwordLength = password.length;
                         let keyIndex = 0;
-                        const lenByte = dataBuffer[offset];
+
+                        const lenByte = buffer[offset];
                         const keyChar = password.charCodeAt(keyIndex % passwordLength);
                         const extLen = lenByte ^ (keyChar + keyIndex) % 256;
                         keyIndex++;
                         offset += 1;
 
-                        // Process Ext (Integrity Check)
-                        const extBytes = dataBuffer.slice(offset, offset + extLen);
+                        // Skip Extension (Decrypt dummy ext)
+                        const extBytes = buffer.slice(offset, offset + extLen);
                         for (let i = 0; i < extLen; i++) {
-                            // Integrity
-                            const val = BigInt(extBytes[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
                             keyIndex++;
                         }
                         offset += extLen;
 
-                        // Process Body (Integrity Check)
-                        const body = dataBuffer.slice(offset);
-                        for (let i = 0; i < body.length; i++) {
-                            // Integrity
-                            const val = BigInt(body[i]);
-                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
-                            tamperHash = BigInt.asUintN(64, tamperHash);
-                            // Decrypt
+                        // Decrypt Body
+                        const bodyEnc = buffer.slice(offset, dataLen);
+                        const bodyDec = new Uint8Array(bodyEnc.length);
+
+                        for (let i = 0; i < bodyEnc.length; i++) {
                             const pIndex = keyIndex % passwordLength;
                             const baseKey = password.charCodeAt(pIndex);
                             const rollingKey = (baseKey + keyIndex) % 256;
-                            body[i] = body[i] ^ rollingKey;
+                            bodyDec[i] = bodyEnc[i] ^ rollingKey;
                             keyIndex++;
                         }
 
-                        if (tamperHash !== expectedTamperHash)
-                            throw new Error("CRITICAL: Integrity Check Failed (Text Tampered)!");
-
-                        textOutput.value = new TextDecoder().decode(body);
+                        textOutput.value = new TextDecoder().decode(bodyDec);
                         textOutputContainer.classList.remove('hidden');
                         log("Message Decrypted! Integrity Verified.", "success");
                     } catch (e) {
                         log(e.message, "error");
                     }
                 } else {
+                    // ENCRYPT TEXT
                     try {
                         let tamperHash = 5381n;
                         // Rolling Hash
@@ -929,19 +986,45 @@
                         let keyIndex = 0;
                         const parts = [];
 
+                        // Header
                         parts.push(BRANDING_BYTES);
+                        for (let i = 0; i < BRANDING_BYTES.length; i++) {
+                            const val = BigInt(BRANDING_BYTES[i]);
+                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                            tamperHash = BigInt.asUintN(64, tamperHash);
+                        }
+
                         const salt = generateSalt(8);
-                        parts.push(new TextEncoder().encode(salt));
+                        const saltBytes = new TextEncoder().encode(salt);
+                        parts.push(saltBytes);
+                        for (let i = 0; i < saltBytes.length; i++) {
+                            const val = BigInt(saltBytes[i]);
+                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                            tamperHash = BigInt.asUintN(64, tamperHash);
+                        }
+
                         const passHash = simpleHash(password + salt);
                         const hashBuffer = new ArrayBuffer(8);
                         new DataView(hashBuffer).setBigUint64(0, passHash, true);
-                        parts.push(new Uint8Array(hashBuffer));
+                        const hashBytes = new Uint8Array(hashBuffer);
+                        parts.push(hashBytes);
+                        for (let i = 0; i < hashBytes.length; i++) {
+                            const val = BigInt(hashBytes[i]);
+                            tamperHash = ((tamperHash << 5n) + tamperHash) + val;
+                            tamperHash = BigInt.asUintN(64, tamperHash);
+                        }
 
+                        // Extension
                         const extBytes = new TextEncoder().encode(".txt");
                         const extLen = extBytes.length;
                         const keyChar = password.charCodeAt(keyIndex % passwordLength);
                         const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-                        parts.push(new Uint8Array([encryptedLen]));
+                        const lenByteArr = new Uint8Array([encryptedLen]);
+                        parts.push(lenByteArr);
+                        // Hash Len Byte
+                        const valLen = BigInt(lenByteArr[0]);
+                        tamperHash = ((tamperHash << 5n) + tamperHash) + valLen;
+                        tamperHash = BigInt.asUintN(64, tamperHash);
                         keyIndex++;
 
                         const encryptedExt = new Uint8Array(extLen);
@@ -957,19 +1040,21 @@
                         }
                         parts.push(encryptedExt);
 
+                        // Body
                         const body = new TextEncoder().encode(text);
+                        const bodyEnc = new Uint8Array(body.length);
                         for (let i = 0; i < body.length; i++) {
                             const pIndex = keyIndex % passwordLength;
                             const baseKey = password.charCodeAt(pIndex);
                             const rollingKey = (baseKey + keyIndex) % 256;
-                            body[i] = body[i] ^ rollingKey;
+                            bodyEnc[i] = body[i] ^ rollingKey;
                             // Integrity
-                            const val = BigInt(body[i]);
+                            const val = BigInt(bodyEnc[i]);
                             tamperHash = ((tamperHash << 5n) + tamperHash) + val;
                             tamperHash = BigInt.asUintN(64, tamperHash);
                             keyIndex++;
                         }
-                        parts.push(body);
+                        parts.push(bodyEnc);
 
                         // Footer
                         const tamperBuf = new ArrayBuffer(8);
