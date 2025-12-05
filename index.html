@@ -1,1003 +1,1151 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NX-Crypt | Secure File & Text Encryption Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>NX-Crypt | Secure File & Text Encryption Tool</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            /* --- Animations & Glassmorphism --- */
+            @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap'); body {
+                font-family: 'Space Grotesk', sans-serif;
+                background-color: #000000;
+                /* Pure Pitch Dark */
+                color: #fff;
+                overflow-x: hidden;
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
 
-        /* --- THEME VARIABLES --- */
-        :root {
-            /* DARK MODE (Default) */
-            --bg-color: #000000;
-            --text-main: #ffffff;
-            --text-muted: #e2e8f0; /* gray-200 */
-            --glass-bg: rgba(15, 23, 42, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --dropzone-bg: rgba(255, 255, 255, 0.05);
-            --dropzone-border: rgba(255, 255, 255, 0.2);
-            --blob-opacity: 0.6;
-            --shadow-color: rgba(0, 0, 0, 0.8);
-        }
+            /* --- Background Blobs --- */
+            .blob {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(100px);
+                z-index: -1;
+                opacity: 0.6;
+                animation: float 20s infinite ease-in-out alternate;
+            }
 
-        [data-theme="light"] {
-            /* LIGHT MODE */
-            --bg-color: #f0f4f8;
-            --text-main: #1e293b; /* slate-800 */
-            --text-muted: #475569; /* slate-600 */
-            --glass-bg: rgba(255, 255, 255, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.6);
-            --input-bg: rgba(255, 255, 255, 0.5);
-            --dropzone-bg: rgba(255, 255, 255, 0.4);
-            --dropzone-border: rgba(100, 116, 139, 0.3);
-            --blob-opacity: 0.4; /* Softer blobs in light mode */
-            --shadow-color: rgba(148, 163, 184, 0.4);
-        }
+            .blob-1 {
+                top: -10%;
+                left: -10%;
+                width: 600px;
+                height: 600px;
+                background: #4c1d95;
+                animation-delay: 0s;
+            }
 
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.5s ease, color 0.5s ease;
-        }
+            .blob-2 {
+                bottom: -10%;
+                right: -10%;
+                width: 700px;
+                height: 700px;
+                background: #1e3a8a;
+                animation-delay: 5s;
+            }
 
-        /* --- Background Blobs --- */
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            opacity: var(--blob-opacity);
-            animation: float 20s infinite ease-in-out alternate;
-            transition: opacity 0.5s ease;
-        }
+            .blob-3 {
+                top: 40%;
+                left: 30%;
+                width: 400px;
+                height: 400px;
+                background: #831843;
+                animation-delay: 10s;
+            }
 
-        .blob-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #4c1d95; animation-delay: 0s; }
-        .blob-2 { bottom: -10%; right: -10%; width: 700px; height: 700px; background: #1e3a8a; animation-delay: 5s; }
-        .blob-3 { top: 40%; left: 30%; width: 400px; height: 400px; background: #831843; animation-delay: 10s; }
+            @keyframes float {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, -30px) scale(1.1); }
-        }
+                100% {
+                    transform: translate(30px, -30px) scale(1.1);
+                }
+            }
 
-        /* --- Interactive Mouse Blob --- */
-        #mouse-blob {
-            position: fixed;
-            left: 0; top: 0;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-            transform: translate(-50%, -50%);
-            filter: blur(60px);
-            mix-blend-mode: screen; /* Keep screen for light/dark interaction */
-            will-change: transform;
-        }
+            /* --- Interactive Mouse Blob --- */
+            #mouse-blob {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 400px;
+                height: 400px;
+                background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(0,0,0,0) 70%);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: -1;
+                transform: translate(-50%, -50%);
+                filter: blur(60px);
+                mix-blend-mode: screen;
+                will-change: transform;
+            }
 
-        /* Glass Container */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px var(--shadow-color), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-        }
+            /* Glass Container */
+            .glass-panel {
+                background: rgba(15, 23, 42, 0.75);
+                backdrop-filter: blur(30px);
+                -webkit-backdrop-filter: blur(30px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            }
 
-        /* Theme Toggle Button */
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--input-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 50;
-        }
-        .theme-toggle:hover {
-            transform: rotate(15deg) scale(1.1);
-            background: rgba(139, 92, 246, 0.2);
-            border-color: #a78bfa;
-        }
+            /* --- MAGIC ANIMATIONS --- */
+            @keyframes shimmer {
+                0% {
+                    background-position: 0% 50%;
+                }
 
-        /* Text Colors Override for Transitions */
-        .dynamic-text { color: var(--text-main); }
-        .dynamic-text-muted { color: var(--text-muted); }
+                50% {
+                    background-position: 100% 50%;
+                }
 
-        /* Drop Zone */
-        .drop-zone {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--dropzone-bg);
-            border: 2px dashed var(--dropzone-border);
-        }
-        .drop-zone:hover, .drop-zone.active {
-            border-color: #a78bfa;
-            background: rgba(139, 92, 246, 0.1);
-            transform: scale(1.01);
-        }
+                100% {
+                    background-position: 0% 50%;
+                }
+            }
 
-        /* Inputs */
-        .glass-input {
-            background: var(--input-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        .glass-input:focus-within {
-            border-color: #a78bfa;
-            background: var(--input-bg);
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
-        }
-        .glass-input input, .glass-input textarea {
-            color: var(--text-main);
-        }
-        .glass-input input:focus, .glass-input textarea:focus { outline: none; }
-        .glass-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+            /* Credit Badge */
+            .credit-badge {
+                transition: all 0.3s ease;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
 
-        /* Buttons */
-        .action-btn {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .action-btn:hover:not(:disabled) {
-            box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
-            filter: brightness(1.2);
-        }
+            .credit-badge:hover {
+                background: linear-gradient(45deg, #4f46e5, #9333ea, #db2777, #4f46e5);
+                background-size: 300% 300%;
+                animation: shimmer 3s ease infinite;
+                box-shadow: 0 0 20px rgba(147, 51, 234, 0.6);
+                border-color: transparent;
+                color: white;
+                transform: scale(1.02);
+            }
 
-        /* Tab Buttons */
-        .tab-btn {
-            background: var(--input-bg);
-            color: var(--text-muted);
-            border: 1px solid var(--glass-border);
-        }
-        .tab-btn.active {
-            background: rgba(139, 92, 246, 0.25);
-            color: var(--text-main);
-            border-color: #a78bfa;
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
-        }
+            /* Drop Zone */
+            .drop-zone {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px dashed rgba(255, 255, 255, 0.2);
+            }
 
-        .secondary-btn {
-            background: var(--input-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-muted);
-        }
-        .secondary-btn:hover {
-            background: rgba(139, 92, 246, 0.1);
-            color: var(--text-main);
-        }
+            .drop-zone:hover, .drop-zone.active {
+                border-color: #a78bfa;
+                background: rgba(139, 92, 246, 0.1);
+                transform: scale(1.01);
+                box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+            }
 
-        /* Credit Badge & Utils */
-        .credit-badge {
-            transition: all 0.3s ease;
-            background: var(--input-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-muted);
-        }
-        .credit-badge:hover {
-            background: linear-gradient(45deg, #4f46e5, #9333ea, #db2777, #4f46e5);
-            background-size: 300% 300%;
-            animation: shimmer 3s ease infinite;
-            border-color: transparent;
-            color: white;
-        }
-        @keyframes shimmer {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+            /* Inputs */
+            .glass-input {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #fff;
+                font-size: 1rem;
+                transition: all 0.3s;
+            }
 
-        /* Animations */
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+            .glass-input:focus-within {
+                border-color: #a78bfa;
+                background: rgba(255, 255, 255, 0.1);
+                box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+            }
 
-        /* Scrollbar */
-        .custom-scroll::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background-color: #6b7280; border-radius: 4px; }
-    </style>
-</head>
-<body class="p-2 md:p-4 selection:bg-purple-500 selection:text-white">
+            .text-fade-mask {
+                -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+                mask-image: linear-gradient(to bottom, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+            }
 
-    <button class="theme-toggle" id="themeSwitch" onclick="toggleTheme()">
-        <i class="fas fa-sun" id="themeIcon"></i>
-    </button>
+            .glass-input input:focus, .glass-input textarea:focus {
+                outline: none;
+            }
 
-    <div id="mouse-blob"></div>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
+            .glass-input::placeholder {
+                color: rgba(255, 255, 255, 0.4);
+            }
 
-    <div class="glass-panel rounded-2xl md:rounded-[2rem] p-5 md:p-10 w-full max-w-2xl relative overflow-hidden backdrop-blur-xl">
-        <div class="text-center mb-6 md:mb-8">
-            <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">NX-Crypt</h1>
-            <p class="dynamic-text-muted text-base md:text-lg font-light tracking-wide">Smart Secure Encryption Tool</p>
-            <a href="https://github.com/nullyex" target="_blank" class="credit-badge mt-2 inline-block px-3 py-1 md:px-4 md:py-1 rounded-full text-[10px] md:text-xs font-semibold tracking-wider cursor-pointer">By NullYex Team • B.Tech AI&DS (IBM)</a>
-        </div>
+            /* Buttons */
+            .action-btn {
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
 
-        <div class="flex gap-3 md:gap-4 mb-6">
-            <button id="tabFile" class="tab-btn active flex-1 py-2 md:py-3 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wide flex items-center justify-center gap-2" onclick="switchTab('file')">
-                <i class="fas fa-file-alt"></i> File Mode
-            </button>
-            <button id="tabText" class="tab-btn flex-1 py-2 md:py-3 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wide flex items-center justify-center gap-2" onclick="switchTab('text')">
-                <i class="fas fa-comment-alt"></i> Text Mode
-            </button>
-        </div>
+            .action-btn:hover:not(:disabled) {
+                box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
+                filter: brightness(1.2);
+            }
 
-        <div id="fileSection" class="animate-fade-in">
-            <div id="dropZone" class="drop-zone rounded-2xl md:rounded-3xl p-6 md:p-12 text-center cursor-pointer mb-6 group relative overflow-hidden">
-                <div id="dropContent">
-                    <div class="mb-3 md:mb-5 relative inline-block">
-                        <div class="absolute inset-0 bg-purple-500 blur-2xl opacity-10 group-hover:opacity-30 transition-opacity rounded-full"></div>
-                        <i class="fas fa-cloud-upload-alt text-4xl md:text-6xl dynamic-text-muted group-hover:text-purple-400 transition-colors relative z-10"></i>
-                    </div>
-                    <h3 class="text-lg md:text-2xl font-semibold mb-1 dynamic-text">Drag & Drop File</h3>
-                    <p class="dynamic-text-muted text-xs md:text-base">or click to browse</p>
-                </div>
-                
-                <div id="fileInfo" class="hidden animate-fade-in">
-                    <div class="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mb-3 md:mb-4 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
-                        <i id="fileIcon" class="fas fa-file text-3xl md:text-4xl text-white"></i>
-                    </div>
-                    <div class="text-base md:text-2xl font-bold truncate px-2 dynamic-text mb-1" id="fileName">filename.ext</div>
-                    <div class="text-sm md:text-base font-bold text-purple-400 font-mono" id="fileSize">0 MB</div>
-                    <div id="detectBadge" class="mt-3 md:mt-4 inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-gray-800 text-gray-300 border border-gray-700 shadow-lg">
-                        <span class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span> Detecting...
-                    </div>
-                </div>
-                <input type="file" id="fileInput" class="hidden">
+            /* Tab Buttons */
+            .tab-btn {
+                background: rgba(255, 255, 255, 0.05);
+                color: #9ca3af;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .tab-btn.active {
+                background: rgba(139, 92, 246, 0.25);
+                color: white;
+                border-color: #a78bfa;
+                box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+            }
+
+            .secondary-btn {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #e5e7eb;
+            }
+
+            .secondary-btn:hover {
+                background: rgba(255, 255, 255, 0.15);
+                color: white;
+            }
+
+            /* --- Premium Custom Scrollbar --- */
+            .custom-scroll {
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .custom-scroll::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            .custom-scroll::-webkit-scrollbar-track {
+                background: transparent;
+                margin-top: 12px;
+                margin-bottom: 12px;
+            }
+
+            .custom-scroll::-webkit-scrollbar-thumb {
+                background-color: #6b7280;
+                border-radius: 6px;
+                border: 2px solid transparent;
+                background-clip: content-box;
+            }
+
+            .custom-scroll::-webkit-scrollbar-thumb:hover {
+                background-color: #9ca3af;
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.5s ease-out forwards;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    </head>
+    <body class="p-2 md:p-4 selection:bg-purple-500 selection:text-white">
+        <div id="mouse-blob"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="glass-panel rounded-2xl md:rounded-[2rem] p-5 md:p-10 w-full max-w-2xl relative overflow-hidden backdrop-blur-xl">
+            <div class="text-center mb-6 md:mb-8">
+                <h1 class="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-purple-400 to-pink-400 mb-2 tracking-tight drop-shadow-[0_0_25px_rgba(168,85,247,0.6)]">NX-Crypt
+            </h1>
+                <p class="text-gray-200 text-base md:text-lg font-light tracking-wide">Smart Secure Encryption Tool</p>
+                <a href="https://github.com/nullyex" target="_blank" class="credit-badge mt-2 inline-block px-3 py-1 md:px-4 md:py-1 rounded-full bg-white/10 border border-white/10 text-[10px] md:text-xs text-gray-300 font-semibold tracking-wider hover:bg-white/20 hover:text-white transition-all cursor-pointer hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]">By NullYex Team • B.Tech AI&DS (IBM)
+            </a>
             </div>
-
-            <div id="progressContainer" class="hidden mb-6">
-                <div class="flex justify-between text-xs dynamic-text-muted font-medium mb-1">
-                    <span id="progressText">Processing...</span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="w-full bg-black/20 rounded-full h-2 backdrop-blur-sm border border-white/10">
-                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all duration-100" style="width: 0%"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="textSection" class="hidden animate-fade-in">
-            <div class="mb-4">
-                <label class="block dynamic-text-muted text-[10px] md:text-xs font-bold mb-2 uppercase tracking-wide">Message / Encrypted Code</label>
-                <div class="glass-input w-full rounded-2xl h-40 md:h-44 flex flex-col">
-                    <textarea id="textInput" class="w-full h-full bg-transparent border-0 resize-none text-sm font-mono custom-scroll focus:outline-none p-4 placeholder-gray-500" placeholder="Type your secret message here... OR paste an encrypted code to decrypt."></textarea>
-                </div>
-            </div>
-            <div id="textOutputContainer" class="hidden mb-4">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-green-500 text-[10px] md:text-xs font-bold uppercase tracking-wide">Result</label>
-                    <div class="flex items-center gap-2">
-                        <span id="copyFeedback" class="text-green-500 text-[10px] md:text-xs font-bold uppercase hidden animate-pulse">Copied!</span>
-                        <button onclick="copyTextOutput()" class="bg-white/10 hover:bg-white/20 dynamic-text text-[10px] md:text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-2 border border-white/10">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                </div>
-                <div class="glass-input w-full rounded-2xl h-36 md:h-40 flex flex-col border-green-500/30">
-                    <textarea id="textOutput" class="w-full h-full bg-transparent border-0 resize-none text-sm font-mono custom-scroll focus:outline-none p-4 text-green-500" readonly></textarea>
-                </div>
-            </div>
-        </div>
-
-        <div class="mb-6" id="controlsArea">
-            <label class="block dynamic-text-muted text-xs md:text-sm font-medium mb-2 ml-1 uppercase tracking-wide">Secure Password</label>
-            <div class="relative group">
-                <input type="password" id="password" class="glass-input w-full rounded-xl md:rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-12 md:pr-14" placeholder="Enter key...">
-                <i class="fas fa-lock absolute left-3 md:left-4 top-3.5 md:top-4 text-gray-400 group-focus-within:text-purple-400 transition-colors text-base md:text-lg"></i>
-                <button type="button" id="togglePassword" class="absolute right-3 md:right-4 top-3.5 md:top-4 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none">
-                    <i class="fas fa-eye text-base md:text-lg"></i>
+            <div class="flex gap-3 md:gap-4 mb-6">
+                <button id="tabFile" class="tab-btn active flex-1 py-2 md:py-3 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wide flex items-center justify-center gap-2" onclick="switchTab('file')">
+                    <i class="fas fa-file-alt"></i>
+                    File Mode
+            
+                </button>
+                <button id="tabText" class="tab-btn flex-1 py-2 md:py-3 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wide flex items-center justify-center gap-2" onclick="switchTab('text')">
+                    <i class="fas fa-comment-alt"></i>
+                    Text Mode
+            
                 </button>
             </div>
-        </div>
-
-        <div class="flex flex-col gap-3">
-            <button id="processBtn" class="action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none bg-gray-800" disabled>Waiting...</button>
-            <button id="resetBtn" class="secondary-btn w-full py-3 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm tracking-wide transform transition hidden" onclick="resetApp()">
-                <i class="fas fa-redo mr-2"></i> Reset
+            <div id="fileSection" class="animate-fade-in">
+                <div id="dropZone" class="drop-zone rounded-2xl md:rounded-3xl p-6 md:p-12 text-center cursor-pointer mb-6 group relative overflow-hidden">
+                    <div id="dropContent">
+                        <div class="mb-3 md:mb-5 relative inline-block">
+                            <div class="absolute inset-0 bg-purple-500 blur-2xl opacity-10 group-hover:opacity-30 transition-opacity rounded-full"></div>
+                            <i class="fas fa-cloud-upload-alt text-4xl md:text-6xl text-gray-300 group-hover:text-white transition-colors relative z-10"></i>
+                        </div>
+                        <h3 class="text-lg md:text-2xl font-semibold mb-1 text-white">Drag & Drop File</h3>
+                        <p class="text-gray-300 text-xs md:text-base">or click to browse</p>
+                    </div>
+                    <div id="fileInfo" class="hidden animate-fade-in">
+                        <div class="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center mb-3 md:mb-4 shadow-[0_0_20px_rgba(124,58,237,0.4)]">
+                            <i id="fileIcon" class="fas fa-file text-3xl md:text-4xl text-white"></i>
+                        </div>
+                        <div class="text-base md:text-2xl font-bold truncate px-2 text-white mb-1" id="fileName">filename.ext</div>
+                        <div class="text-sm md:text-base font-bold text-purple-300 font-mono" id="fileSize">0 MB</div>
+                        <div id="detectBadge" class="mt-3 md:mt-4 inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-gray-800 text-gray-300 border border-gray-700 shadow-lg">
+                            <span class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></span>
+                            Detecting...
+                    
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden">
+                </div>
+                <div id="progressContainer" class="hidden mb-6">
+                    <div class="flex justify-between text-xs text-gray-300 font-medium mb-1">
+                        <span id="progressText">Processing...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-black/40 rounded-full h-2 backdrop-blur-sm border border-white/10">
+                        <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all duration-100" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="textSection" class="hidden animate-fade-in">
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-[10px] md:text-xs font-bold mb-2 uppercase tracking-wide">Message / Encrypted Code</label>
+                    <div class="glass-input w-full rounded-2xl h-40 md:h-44 flex flex-col">
+                        <textarea id="textInput" class="w-full h-full bg-transparent border-0 resize-none text-sm font-mono custom-scroll text-fade-mask focus:outline-none p-4 pr-1 placeholder-gray-500" placeholder="Type your secret message here... OR paste an encrypted code to decrypt."></textarea>
+                    </div>
+                </div>
+                <div id="textOutputContainer" class="hidden mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-green-400 text-[10px] md:text-xs font-bold uppercase tracking-wide">Result
+                    </label>
+                        <div class="flex items-center gap-2">
+                            <span id="copyFeedback" class="text-white text-[10px] md:text-xs font-bold uppercase hidden animate-pulse">Copied!</span>
+                            <button onclick="copyTextOutput()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-2 border border-white/10">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                        
+                            </button>
+                        </div>
+                    </div>
+                    <div class="glass-input w-full rounded-2xl h-36 md:h-40 flex flex-col bg-black/40 border-green-500/30">
+                        <textarea id="textOutput" class="w-full h-full bg-transparent border-0 resize-none text-sm font-mono custom-scroll text-fade-mask focus:outline-none p-4 pr-1 text-green-400" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-6" id="controlsArea">
+                <label class="block text-gray-300 text-xs md:text-sm font-medium mb-2 ml-1 uppercase tracking-wide">Secure Password</label>
+                <div class="relative group">
+                    <input type="password" id="password" class="glass-input w-full rounded-xl md:rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-12 md:pr-14" placeholder="Enter key...">
+                    <i class="fas fa-lock absolute left-3 md:left-4 top-3.5 md:top-4 text-gray-400 group-focus-within:text-purple-400 transition-colors text-base md:text-lg"></i>
+                    <button type="button" id="togglePassword" class="absolute right-3 md:right-4 top-3.5 md:top-4 text-gray-400 hover:text-white transition-colors focus:outline-none">
+                        <i class="fas fa-eye text-base md:text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button id="processBtn" class="action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none bg-gray-800" disabled>Waiting...
             </button>
-        </div>
-
-        <div class="mt-6">
-            <div class="glass-input w-full rounded-xl md:rounded-2xl h-28 md:h-32 flex flex-col">
-                <div class="w-full h-full overflow-y-auto custom-scroll font-mono text-[10px] md:text-xs shadow-inner p-4" id="consoleLog">
-                    <div class="dynamic-text-muted flex items-center gap-2">
-                        <span class="text-green-500">➜</span> System Ready.
+                <button id="resetBtn" class="secondary-btn w-full py-3 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm tracking-wide transform transition hidden" onclick="resetApp()">
+                    <i class="fas fa-redo mr-2"></i>
+                    Reset
+            
+                </button>
+            </div>
+            <div class="mt-6">
+                <div class="glass-input w-full rounded-xl md:rounded-2xl h-28 md:h-32 flex flex-col bg-black/60">
+                    <div class="w-full h-full overflow-y-auto custom-scroll text-fade-mask font-mono text-[10px] md:text-xs shadow-inner p-4" id="consoleLog">
+                        <div class="text-gray-400 flex items-center gap-2">
+                            <span class="text-green-500">➜</span>
+                            System Ready.
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        <script>
+            // --- CONSTANTS ---
+            const BUFFER_SIZE = 1024 * 1024;
+            const EXTENSION = ".NullYex";
+            const BRANDING = "By_NullYex";
+            const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
 
-    <script>
-        // --- CONSTANTS ---
-        const BUFFER_SIZE = 1024 * 1024;
-        const EXTENSION = ".NullYex";
-        const BRANDING = "By_NullYex";
-        const BRANDING_BYTES = new TextEncoder().encode(BRANDING);
-        const MYSTERY_EMOJIS = ['🔒', '🔐', '🤐', '💀', '🙈', '🕵️', '🧩', '😂', '🎲', '🌀', '🔮', '🎭', '👻', '👽', '🤖', '👾', '🐉', '🌚', '🗿', '🤫', '🏴‍☠️'];
+            // Random Emoji List for Encrypted Files
+            const MYSTERY_EMOJIS = ['🔒', '🔐', '🤐', '💀', '🙈', '🤦‍♀️', '🕵️', '🧩', '😂', '🎲', '🌀', '🔮', '🎭', '👻', '👽', '🤖', '👾', '🐉', '🌚', '🗿', '🤫', '🏴‍☠️'];
 
-        // --- THEME LOGIC ---
-        const themeSwitch = document.getElementById('themeSwitch');
-        const themeIcon = document.getElementById('themeIcon');
-        
-        function toggleTheme() {
-            const html = document.documentElement;
-            if (html.getAttribute('data-theme') === 'light') {
-                html.removeAttribute('data-theme');
-                themeIcon.className = 'fas fa-sun';
-                localStorage.setItem('theme', 'dark');
-            } else {
-                html.setAttribute('data-theme', 'light');
-                themeIcon.className = 'fas fa-moon';
-                localStorage.setItem('theme', 'light');
+            // --- MOUSE BLOB LOGIC ---
+            const mouseBlob = document.getElementById('mouse-blob');
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let blobX = mouseX;
+            let blobY = mouseY;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
             }
-        }
+            );
 
-        // Init Theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeIcon.className = 'fas fa-moon';
-        }
-
-        // --- MOUSE BLOB LOGIC ---
-        const mouseBlob = document.getElementById('mouse-blob');
-        let mouseX = window.innerWidth / 2;
-        let mouseY = window.innerHeight / 2;
-        let blobX = mouseX;
-        let blobY = mouseY;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateBlob() {
-            blobX += (mouseX - blobX) * 0.1;
-            blobY += (mouseY - blobY) * 0.1;
-            mouseBlob.style.transform = `translate(${blobX}px, ${blobY}px) translate(-50%, -50%)`;
-            requestAnimationFrame(animateBlob);
-        }
-        animateBlob();
-
-        // --- GLOBAL STATE ---
-        let currentMode = 'file';
-        let selectedFile = null;
-        let isEncrypted = false;
-        let isTextEncrypted = false;
-        let currentProcessedBlob = null;
-        let currentProcessedName = "";
-
-        // --- UI ELEMENTS ---
-        const tabFile = document.getElementById('tabFile');
-        const tabText = document.getElementById('tabText');
-        const fileSection = document.getElementById('fileSection');
-        const textSection = document.getElementById('textSection');
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const dropContent = document.getElementById('dropContent');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileNameEl = document.getElementById('fileName');
-        const fileSizeEl = document.getElementById('fileSize');
-        const fileIcon = document.getElementById('fileIcon');
-        const detectBadge = document.getElementById('detectBadge');
-        const textInput = document.getElementById('textInput');
-        const textOutputContainer = document.getElementById('textOutputContainer');
-        const textOutput = document.getElementById('textOutput');
-        const controlsArea = document.getElementById('controlsArea');
-        const processBtn = document.getElementById('processBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const consoleLog = document.getElementById('consoleLog');
-        const passwordInput = document.getElementById('password');
-        const togglePasswordBtn = document.getElementById('togglePassword');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressPercent = document.getElementById('progressPercent');
-
-        // --- UTILS ---
-        function log(msg, type='info') {
-            const div = document.createElement('div');
-            div.className = 'flex items-start gap-2 mt-1';
-            let icon = '<span class="text-gray-500">➜</span>';
-            let contentClass = 'dynamic-text-muted'; // Use dynamic class
-            if (type === 'error') {
-                icon = '<span class="text-red-500">✖</span>';
-                contentClass = 'text-red-400';
-            } else if (type === 'success') {
-                icon = '<span class="text-green-500">✔</span>';
-                contentClass = 'text-green-500 font-semibold';
+            function animateBlob() {
+                blobX += (mouseX - blobX) * 0.1;
+                blobY += (mouseY - blobY) * 0.1;
+                mouseBlob.style.transform = `translate(${blobX}px, ${blobY}px) translate(-50%, -50%)`;
+                requestAnimationFrame(animateBlob);
             }
-            div.innerHTML = `${icon} <span class="${contentClass}">${msg}</span>`;
-            consoleLog.appendChild(div);
-            consoleLog.scrollTop = consoleLog.scrollHeight;
-        }
+            animateBlob();
 
-        function formatBytes(bytes, decimals=2) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
-        }
+            // --- GLOBAL STATE ---
+            let currentMode = 'file';
+            let selectedFile = null;
+            let isEncrypted = false;
+            let isTextEncrypted = false;
+            let currentProcessedBlob = null;
+            let currentProcessedName = "";
 
-        // --- TAB SWITCHING ---
-        function switchTab(mode) {
-            currentMode = mode;
-            if (mode === 'file') {
-                tabFile.classList.add('active');
-                tabText.classList.remove('active');
-                fileSection.classList.remove('hidden');
-                textSection.classList.add('hidden');
-                if (currentProcessedBlob) {
-                    switchToSaveMode();
-                    controlsArea.classList.add('opacity-50', 'pointer-events-none');
+            // --- UI ELEMENTS ---
+            const tabFile = document.getElementById('tabFile');
+            const tabText = document.getElementById('tabText');
+            const fileSection = document.getElementById('fileSection');
+            const textSection = document.getElementById('textSection');
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const dropContent = document.getElementById('dropContent');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileNameEl = document.getElementById('fileName');
+            const fileSizeEl = document.getElementById('fileSize');
+            const fileIcon = document.getElementById('fileIcon');
+            const detectBadge = document.getElementById('detectBadge');
+            const textInput = document.getElementById('textInput');
+            const textOutputContainer = document.getElementById('textOutputContainer');
+            const textOutput = document.getElementById('textOutput');
+            const controlsArea = document.getElementById('controlsArea');
+            const processBtn = document.getElementById('processBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const consoleLog = document.getElementById('consoleLog');
+            const passwordInput = document.getElementById('password');
+            const togglePasswordBtn = document.getElementById('togglePassword');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+
+            // --- UTILS ---
+            function log(msg, type='info') {
+                const div = document.createElement('div');
+                div.className = 'flex items-start gap-2 mt-1';
+                let icon = '<span class="text-gray-500">➜</span>';
+                let contentClass = 'text-gray-300';
+                if (type === 'error') {
+                    icon = '<span class="text-red-500">✖</span>';
+                    contentClass = 'text-red-300';
+                } else if (type === 'success') {
+                    icon = '<span class="text-green-400">✔</span>';
+                    contentClass = 'text-green-300 font-semibold';
+                }
+                div.innerHTML = `${icon} <span class="${contentClass}">${msg}</span>`;
+                consoleLog.appendChild(div);
+                consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
+
+            function formatBytes(bytes, decimals=2) {
+                if (bytes === 0)
+                    return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+            }
+
+            // --- TAB SWITCHING ---
+            function switchTab(mode) {
+                currentMode = mode;
+                if (mode === 'file') {
+                    tabFile.classList.add('active');
+                    tabText.classList.remove('active');
+                    fileSection.classList.remove('hidden');
+                    textSection.classList.add('hidden');
+
+                    if (currentProcessedBlob) {
+                        switchToSaveMode();
+                        controlsArea.classList.add('opacity-50', 'pointer-events-none');
+                    } else {
+                        controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+                        resetBtn.classList.add('hidden');
+                        updateFileBtnState();
+                    }
                 } else {
+                    tabText.classList.add('active');
+                    tabFile.classList.remove('active');
+                    textSection.classList.remove('hidden');
+                    fileSection.classList.add('hidden');
+
                     controlsArea.classList.remove('opacity-50', 'pointer-events-none');
                     resetBtn.classList.add('hidden');
-                    updateFileBtnState();
+                    updateTextBtnState();
                 }
-            } else {
-                tabText.classList.add('active');
-                tabFile.classList.remove('active');
-                textSection.classList.remove('hidden');
-                fileSection.classList.add('hidden');
-                controlsArea.classList.remove('opacity-50', 'pointer-events-none');
-                resetBtn.classList.add('hidden');
-                updateTextBtnState();
+                log(`Switched to ${mode.toUpperCase()} Mode.`);
             }
-            log(`Switched to ${mode.toUpperCase()} Mode.`);
-        }
 
-        // --- RESET ---
-        function resetApp() {
-            selectedFile = null;
-            isEncrypted = false;
-            currentProcessedBlob = null;
-            currentProcessedName = "";
-            fileInput.value = '';
-            passwordInput.value = '';
-            textInput.value = '';
-            textOutput.value = '';
-            textOutputContainer.classList.add('hidden');
-
-            dropContent.classList.remove('hidden');
-            fileInfo.classList.add('hidden');
-            controlsArea.classList.remove('opacity-50', 'pointer-events-none');
-            progressContainer.classList.add('hidden');
-            progressBar.style.width = '0%';
-            progressPercent.textContent = '0%';
-            resetBtn.classList.add('hidden');
-
-            fileIcon.className = "fas fa-file text-3xl md:text-4xl text-white";
-            fileIcon.textContent = "";
-
-            if (currentMode === 'file') updateFileBtnState();
-            else updateTextBtnState();
-            log("System Reset.");
-        }
-
-        // --- ICON HELPER ---
-        function getIconForFile(filename) {
-            if (filename.endsWith(EXTENSION)) return 'fa-file-shield';
-            const ext = filename.split('.').pop().toLowerCase();
-            switch (ext) {
-                case 'png': case 'jpg': case 'jpeg': case 'gif': case 'webp': case 'svg': return 'fa-file-image';
-                case 'mp4': case 'mkv': case 'avi': case 'mov': case 'webm': return 'fa-file-video';
-                case 'mp3': case 'wav': case 'ogg': case 'flac': return 'fa-file-audio';
-                case 'zip': case 'rar': case '7z': case 'tar': case 'gz': return 'fa-file-archive';
-                case 'txt': case 'md': case 'c': case 'cpp': case 'py': case 'js': case 'html': case 'css': return 'fa-file-code';
-                case 'pdf': return 'fa-file-pdf';
-                case 'doc': case 'docx': return 'fa-file-word';
-                case 'xls': case 'xlsx': return 'fa-file-excel';
-                case 'ppt': case 'pptx': return 'fa-file-powerpoint';
-                default: return 'fa-file';
-            }
-        }
-
-        // --- FILE HANDLE ---
-        async function handleFile(file) {
-            selectedFile = file;
-            dropContent.classList.add('hidden');
-            fileInfo.classList.remove('hidden');
-            fileNameEl.textContent = file.name;
-            fileSizeEl.textContent = formatBytes(file.size);
-            fileIcon.textContent = '';
-
-            const headerSlice = file.slice(0, BRANDING_BYTES.length);
-            const headerBuffer = await headerSlice.arrayBuffer();
-            const headerText = new TextDecoder().decode(headerBuffer);
-
-            controlsArea.classList.remove('opacity-50', 'pointer-events-none');
-
-            if (headerText === BRANDING) {
-                isEncrypted = true;
-                detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span> ENCRYPTED';
-                detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-pink-900/20 text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]";
-                
-                const randomEmoji = MYSTERY_EMOJIS[Math.floor(Math.random() * MYSTERY_EMOJIS.length)];
-                fileIcon.className = "text-4xl md:text-5xl not-italic leading-none filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]";
-                fileIcon.textContent = randomEmoji;
-
-                updateFileBtnState();
-                log(`Detected Signature. Mode: DECRYPT`);
-            } else {
+            // --- RESET ---
+            function resetApp() {
+                selectedFile = null;
                 isEncrypted = false;
-                detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span> STANDARD FILE';
-                detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-green-900/20 text-green-300 border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]";
-                
-                const iconClass = getIconForFile(file.name);
-                fileIcon.className = `fas ${iconClass} text-3xl md:text-4xl text-white`;
+                currentProcessedBlob = null;
+                currentProcessedName = "";
+                fileInput.value = '';
+                passwordInput.value = '';
+                textInput.value = '';
+                textOutput.value = '';
+                textOutputContainer.classList.add('hidden');
 
-                updateFileBtnState();
-                log("Standard file. Mode: ENCRYPT");
-            }
-        }
+                dropContent.classList.remove('hidden');
+                fileInfo.classList.add('hidden');
+                controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+                progressContainer.classList.add('hidden');
+                progressBar.style.width = '0%';
+                progressPercent.textContent = '0%';
+                resetBtn.classList.add('hidden');
 
-        // --- UI STATES ---
-        function updateFileBtnState() {
-            if (!selectedFile) {
-                processBtn.textContent = "Waiting for file...";
-                processBtn.disabled = true;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-gray-800 cursor-not-allowed";
-                processBtn.onclick = null;
-            } else if (isEncrypted) {
-                processBtn.textContent = "Decrypt File";
-                processBtn.disabled = false;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-pink-600 to-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.4)] border border-pink-500/30";
-                processBtn.onclick = startFileProcessing;
-            } else {
-                processBtn.textContent = "Encrypt File";
-                processBtn.disabled = false;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-500/30";
-                processBtn.onclick = startFileProcessing;
-            }
-        }
+                // Reset Icon
+                fileIcon.className = "fas fa-file text-3xl md:text-4xl text-white";
+                fileIcon.textContent = "";
+                // Clear emoji
 
-        textInput.addEventListener('input', updateTextBtnState);
-        function updateTextBtnState() {
-            const val = textInput.value.trim();
-            let looksEncrypted = false;
-            try {
-                if (val.length > 20) {
-                    const decoded = atob(val);
-                    if (decoded.startsWith(BRANDING)) looksEncrypted = true;
-                }
-            } catch (e) {}
-            isTextEncrypted = looksEncrypted;
-
-            if (val.length === 0) {
-                processBtn.textContent = "Type a message...";
-                processBtn.disabled = true;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-gray-800 cursor-not-allowed";
-                processBtn.onclick = null;
-            } else if (looksEncrypted) {
-                processBtn.textContent = "Decrypt Message";
-                processBtn.disabled = false;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-pink-600 to-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.4)] border border-pink-500/30";
-                processBtn.onclick = startTextProcessing;
-            } else {
-                processBtn.textContent = "Encrypt Message";
-                processBtn.disabled = false;
-                processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-500/30";
-                processBtn.onclick = startTextProcessing;
-            }
-        }
-
-        // --- CRYPTO HELPER ---
-        function generateSalt(length) {
-            const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-            let salt = "";
-            for (let i = 0; i < length; i++) salt += charset.charAt(Math.floor(Math.random() * charset.length));
-            return salt;
-        }
-        function simpleHash(data) {
-            let hash = 5381n;
-            for (let i = 0; i < data.length; i++) {
-                const c = BigInt(data.charCodeAt(i));
-                hash = ((hash << 5n) + hash) + c;
-                hash = BigInt.asUintN(64, hash);
-            }
-            return hash;
-        }
-
-        // --- TEXT PROCESSING ---
-        async function startTextProcessing() {
-            const password = passwordInput.value;
-            if (!password) {
-                log("Error: Password cannot be empty!", "error");
-                return;
-            }
-            const text = textInput.value.trim();
-            if (!text) return;
-
-            if (isTextEncrypted) {
-                try {
-                    const rawData = atob(text);
-                    const buffer = new Uint8Array(rawData.length);
-                    for (let i = 0; i < rawData.length; i++) buffer[i] = rawData.charCodeAt(i);
-
-                    let offset = 0;
-                    const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
-                    if (brandingCheck !== BRANDING) throw new Error("Invalid Branding");
-                    offset += BRANDING_BYTES.length;
-
-                    const saltBytes = buffer.slice(offset, offset + 8);
-                    const salt = new TextDecoder().decode(saltBytes);
-                    offset += 8;
-
-                    const hashBytes = buffer.slice(offset, offset + 8);
-                    const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
-                    offset += 8;
-
-                    const inputHash = simpleHash(password + salt);
-                    if (inputHash !== storedHash) throw new Error("Incorrect Password");
-
-                    const passwordLength = password.length;
-                    let keyIndex = 0;
-                    const lenByte = buffer[offset];
-                    const keyChar = password.charCodeAt(keyIndex % passwordLength);
-                    const extLen = lenByte ^ (keyChar + keyIndex) % 256;
-                    keyIndex++;
-                    offset += 1;
-                    for (let i = 0; i < extLen; i++) keyIndex++;
-                    offset += extLen;
-
-                    const body = buffer.slice(offset);
-                    for (let i = 0; i < body.length; i++) {
-                        const pIndex = keyIndex % passwordLength;
-                        const baseKey = password.charCodeAt(pIndex);
-                        const rollingKey = (baseKey + keyIndex) % 256;
-                        body[i] = body[i] ^ rollingKey;
-                        keyIndex++;
-                    }
-                    textOutput.value = new TextDecoder().decode(body);
-                    textOutputContainer.classList.remove('hidden');
-                    log("Message Decrypted!", "success");
-                } catch (e) {
-                    log("Decryption Failed: " + e.message, "error");
-                }
-            } else {
-                try {
-                    const passwordLength = password.length;
-                    let keyIndex = 0;
-                    const parts = [];
-                    parts.push(BRANDING_BYTES);
-                    const salt = generateSalt(8);
-                    parts.push(new TextEncoder().encode(salt));
-                    const passHash = simpleHash(password + salt);
-                    const hashBuffer = new ArrayBuffer(8);
-                    new DataView(hashBuffer).setBigUint64(0, passHash, true);
-                    parts.push(new Uint8Array(hashBuffer));
-                    const extBytes = new TextEncoder().encode(".txt");
-                    const extLen = extBytes.length;
-                    const keyChar = password.charCodeAt(keyIndex % passwordLength);
-                    const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-                    parts.push(new Uint8Array([encryptedLen]));
-                    keyIndex++;
-                    const encryptedExt = new Uint8Array(extLen);
-                    for (let i = 0; i < extLen; i++) {
-                        const k = password.charCodeAt(keyIndex % passwordLength);
-                        const rollingKey = (k + keyIndex) % 256;
-                        encryptedExt[i] = extBytes[i] ^ rollingKey;
-                        keyIndex++;
-                    }
-                    parts.push(encryptedExt);
-                    const body = new TextEncoder().encode(text);
-                    for (let i = 0; i < body.length; i++) {
-                        const pIndex = keyIndex % passwordLength;
-                        const baseKey = password.charCodeAt(pIndex);
-                        const rollingKey = (baseKey + keyIndex) % 256;
-                        body[i] = body[i] ^ rollingKey;
-                        keyIndex++;
-                    }
-                    parts.push(body);
-
-                    const totalLength = parts.reduce( (acc, curr) => acc + curr.length, 0);
-                    const merged = new Uint8Array(totalLength);
-                    let offset = 0;
-                    for (let p of parts) {
-                        merged.set(p, offset);
-                        offset += p.length;
-                    }
-                    let binary = '';
-                    const len = merged.byteLength;
-                    for (let i = 0; i < len; i++) binary += String.fromCharCode(merged[i]);
-                    textOutput.value = btoa(binary);
-                    textOutputContainer.classList.remove('hidden');
-                    copyTextOutput();
-                    log("Message Encrypted & Copied!", "success");
-                } catch (e) {
-                    log("Encryption Failed: " + e.message, "error");
-                }
-            }
-        }
-
-        function copyTextOutput() {
-            const output = document.getElementById('textOutput');
-            output.select();
-            output.setSelectionRange(0, 99999);
-            try {
-                document.execCommand('copy');
-                const feedback = document.getElementById('copyFeedback');
-                feedback.classList.remove('hidden');
-                setTimeout( () => feedback.classList.add('hidden'), 2000);
-            } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
-            }
-            window.getSelection().removeAllRanges();
-            output.blur();
-        }
-
-        // --- FILE PROCESSING ---
-        async function startFileProcessing() {
-            const password = passwordInput.value;
-            if (!password) {
-                log("Error: Password cannot be empty!", "error");
-                return;
-            }
-            controlsArea.classList.add('opacity-50', 'pointer-events-none');
-            processBtn.disabled = true;
-            processBtn.innerHTML = '<div class="loader inline-block mr-3"></div> Processing...';
-
-            try {
-                if (!isEncrypted) await encryptFile(selectedFile, password);
-                else await decryptFile(selectedFile, password);
-            } catch (err) {
-                log(err.message, 'error');
-                processBtn.textContent = "Failed";
-                processBtn.className = "w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-red-600 shadow-lg";
-                setTimeout( () => {
-                    processBtn.disabled = false;
-                    controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+                if (currentMode === 'file')
                     updateFileBtnState();
-                    progressContainer.classList.add('hidden');
-                    progressBar.style.width = '0%';
-                }, 670);
+                else
+                    updateTextBtnState();
+                log("System Reset.");
             }
-        }
 
-        async function encryptFile(file, password) {
-            log("Starting File Encryption...");
-            progressContainer.classList.remove('hidden');
-
-            const passwordLength = password.length;
-            let keyIndex = 0;
-            const chunks = [];
-            chunks.push(BRANDING_BYTES);
-            const salt = generateSalt(8);
-            chunks.push(new TextEncoder().encode(salt));
-            const passHash = simpleHash(password + salt);
-            const hashBuffer = new ArrayBuffer(8);
-            new DataView(hashBuffer).setBigUint64(0, passHash, true);
-            chunks.push(new Uint8Array(hashBuffer));
-            const dotIndex = file.name.lastIndexOf('.');
-            const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
-            const extBytes = new TextEncoder().encode(ext);
-            const extLen = extBytes.length;
-            const keyChar = password.charCodeAt(keyIndex % passwordLength);
-            const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
-            chunks.push(new Uint8Array([encryptedLen]));
-            keyIndex++;
-            const encryptedExt = new Uint8Array(extLen);
-            for (let i = 0; i < extLen; i++) {
-                const k = password.charCodeAt(keyIndex % passwordLength);
-                const rollingKey = (k + keyIndex) % 256;
-                encryptedExt[i] = extBytes[i] ^ rollingKey;
-                keyIndex++;
-            }
-            chunks.push(encryptedExt);
-
-            const totalSize = file.size;
-            let offset = 0;
-            const startTime = performance.now();
-
-            while (offset < totalSize) {
-                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
-                const chunkBuffer = await chunkSlice.arrayBuffer();
-                const chunkArray = new Uint8Array(chunkBuffer);
-                for (let i = 0; i < chunkArray.length; i++) {
-                    const pIndex = keyIndex % passwordLength;
-                    const baseKey = password.charCodeAt(pIndex);
-                    const rollingKey = (baseKey + keyIndex) % 256;
-                    chunkArray[i] = chunkArray[i] ^ rollingKey;
-                    keyIndex++;
+            // --- ICON HELPER ---
+            function getIconForFile(filename) {
+                if (filename.endsWith(EXTENSION))
+                    return 'fa-file-shield';
+                // Default encrypted
+                const ext = filename.split('.').pop().toLowerCase();
+                switch (ext) {
+                case 'png':
+                case 'jpg':
+                case 'jpeg':
+                case 'gif':
+                case 'webp':
+                case 'svg':
+                    return 'fa-file-image';
+                case 'mp4':
+                case 'mkv':
+                case 'avi':
+                case 'mov':
+                case 'webm':
+                    return 'fa-file-video';
+                case 'mp3':
+                case 'wav':
+                case 'ogg':
+                case 'flac':
+                    return 'fa-file-audio';
+                case 'zip':
+                case 'rar':
+                case '7z':
+                case 'tar':
+                case 'gz':
+                    return 'fa-file-archive';
+                case 'txt':
+                case 'md':
+                case 'c':
+                case 'cpp':
+                case 'py':
+                case 'js':
+                case 'html':
+                case 'css':
+                    return 'fa-file-code';
+                case 'pdf':
+                    return 'fa-file-pdf';
+                case 'doc':
+                case 'docx':
+                    return 'fa-file-word';
+                case 'xls':
+                case 'xlsx':
+                    return 'fa-file-excel';
+                case 'ppt':
+                case 'pptx':
+                    return 'fa-file-powerpoint';
+                default:
+                    return 'fa-file';
                 }
-                chunks.push(chunkArray);
-                offset += BUFFER_SIZE;
-
-                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
-                const elapsed = (performance.now() - startTime) / 1000;
-                const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
-                progressBar.style.width = percent + "%";
-                progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
-                await new Promise(r => setTimeout(r, 0));
             }
-            const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
-            currentProcessedBlob = new Blob(chunks);
-            currentProcessedName = finalName;
-            log("Encryption Complete! Ready to save.", "success");
-            switchToSaveMode();
-            saveProcessedFile();
-        }
 
-        async function decryptFile(file, password) {
-            log("Starting File Decryption...");
-            const passwordLength = password.length;
-            let keyIndex = 0;
-            let offset = 0;
-            const sigBlob = file.slice(0, BRANDING.length);
-            const sigText = await sigBlob.text();
-            if (sigText !== BRANDING) throw new Error("Invalid branding signature.");
-            offset += BRANDING.length;
-            const saltBlob = file.slice(offset, offset + 8);
-            const salt = await saltBlob.text();
-            offset += 8;
-            const hashBlob = file.slice(offset, offset + 8);
-            const hashBuf = await hashBlob.arrayBuffer();
-            const storedHash = new DataView(hashBuf).getBigUint64(0, true);
-            offset += 8;
-            const inputHash = simpleHash(password + salt);
-            if (inputHash !== storedHash) throw new Error("ACCESS DENIED: Incorrect Password.");
-            log("Password Verified. Access Granted.", "success");
-            progressContainer.classList.remove('hidden');
+            // --- FILE HANDLE ---
+            async function handleFile(file) {
+                selectedFile = file;
+                dropContent.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+                fileNameEl.textContent = file.name;
+                fileSizeEl.textContent = formatBytes(file.size);
 
-            const lenBlob = file.slice(offset, offset + 1);
-            const lenArr = new Uint8Array(await lenBlob.arrayBuffer());
-            offset += 1;
-            const keyChar = password.charCodeAt(keyIndex % passwordLength);
-            const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256;
-            keyIndex++;
-            const extBlob = file.slice(offset, offset + extLen);
-            const extArr = new Uint8Array(await extBlob.arrayBuffer());
-            offset += extLen;
-            const decryptedExtBytes = new Uint8Array(extLen);
-            for (let i = 0; i < extLen; i++) {
-                const k = password.charCodeAt(keyIndex % passwordLength);
-                const rollingKey = (k + keyIndex) % 256;
-                decryptedExtBytes[i] = extArr[i] ^ rollingKey;
-                keyIndex++;
-            }
-            const extension = new TextDecoder().decode(decryptedExtBytes);
-            
-            const chunks = [];
-            const totalSize = file.size;
-            const startTime = performance.now();
+                // Reset emoji state for standard file check
+                fileIcon.textContent = '';
 
-            while (offset < totalSize) {
-                const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
-                const chunkBuf = await chunkSlice.arrayBuffer();
-                const chunkArray = new Uint8Array(chunkBuf);
-                for (let i = 0; i < chunkArray.length; i++) {
-                    const pIndex = keyIndex % passwordLength;
-                    const baseKey = password.charCodeAt(pIndex);
-                    const rollingKey = (baseKey + keyIndex) % 256;
-                    chunkArray[i] = chunkArray[i] ^ rollingKey;
-                    keyIndex++;
-                }
-                chunks.push(chunkArray);
-                offset += chunkArray.length;
+                const headerSlice = file.slice(0, BRANDING_BYTES.length);
+                const headerBuffer = await headerSlice.arrayBuffer();
+                const headerText = new TextDecoder().decode(headerBuffer);
 
-                const percent = Math.min(100, Math.round((offset / totalSize) * 100));
-                const elapsed = (performance.now() - startTime) / 1000;
-                const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
-                progressBar.style.width = percent + "%";
-                progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
-                await new Promise(r => setTimeout(r, 0));
-            }
-            let originalName = file.name;
-            if (originalName.endsWith(EXTENSION)) originalName = originalName.slice(0, -EXTENSION.length);
-            originalName += extension;
-            currentProcessedBlob = new Blob(chunks);
-            currentProcessedName = originalName;
-            log("Decryption Complete! Ready to save.", "success");
-            switchToSaveMode();
-            saveProcessedFile();
-        }
+                controlsArea.classList.remove('opacity-50', 'pointer-events-none');
 
-        function switchToSaveMode() {
-            processBtn.disabled = false;
-            processBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Save File';
-            processBtn.className = "action-btn w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition hover:scale-[1.02] bg-gradient-to-r from-green-500 to-emerald-600 shadow-[0_0_30px_rgba(16,185,129,0.4)]";
-            processBtn.onclick = saveProcessedFile;
-            resetBtn.classList.remove('hidden');
-        }
+                if (headerText === BRANDING) {
+                    isEncrypted = true;
+                    detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></span> ENCRYPTED';
+                    detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-pink-900/20 text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.1)]";
 
-        async function saveProcessedFile() {
-            if (!currentProcessedBlob) {
-                log("No file to save!", "error");
-                return;
-            }
-            try {
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({ suggestedName: currentProcessedName });
-                    const writable = await handle.createWritable();
-                    await writable.write(currentProcessedBlob);
-                    await writable.close();
-                    log("File saved successfully!", "success");
+                    // RANDOM EMOJI FOR ENCRYPTED FILE
+                    const randomEmoji = MYSTERY_EMOJIS[Math.floor(Math.random() * MYSTERY_EMOJIS.length)];
+                    fileIcon.className = "text-4xl md:text-5xl not-italic leading-none filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]";
+                    fileIcon.textContent = randomEmoji;
+
+                    updateFileBtnState();
+                    log(`Detected Signature. Mode: DECRYPT`);
                 } else {
-                    const url = URL.createObjectURL(currentProcessedBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = currentProcessedName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    log("Download started.", "success");
+                    isEncrypted = false;
+                    detectBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span> STANDARD FILE';
+                    detectBadge.className = "mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider bg-green-900/20 text-green-300 border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]";
+
+                    // STANDARD ICON
+                    const iconClass = getIconForFile(file.name);
+                    fileIcon.className = `fas ${iconClass} text-3xl md:text-4xl text-white`;
+
+                    updateFileBtnState();
+                    log("Standard file. Mode: ENCRYPT");
                 }
-            } catch (err) {
-                if (err.name === 'AbortError') log("Save cancelled. File kept in memory.", "error");
             }
-        }
 
-        passwordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !processBtn.disabled) {
+            // --- UI STATES ---
+            function updateFileBtnState() {
+                if (!selectedFile) {
+                    processBtn.textContent = "Waiting for file...";
+                    processBtn.disabled = true;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-gray-800 cursor-not-allowed";
+                    processBtn.onclick = null;
+                } else if (isEncrypted) {
+                    processBtn.textContent = "Decrypt File";
+                    processBtn.disabled = false;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-pink-600 to-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.4)] border border-pink-500/30";
+                    processBtn.onclick = startFileProcessing;
+                } else {
+                    processBtn.textContent = "Encrypt File";
+                    processBtn.disabled = false;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-500/30";
+                    processBtn.onclick = startFileProcessing;
+                }
+            }
+
+            textInput.addEventListener('input', updateTextBtnState);
+            function updateTextBtnState() {
+                const val = textInput.value.trim();
+                let looksEncrypted = false;
+                try {
+                    if (val.length > 20) {
+                        const decoded = atob(val);
+                        if (decoded.startsWith(BRANDING))
+                            looksEncrypted = true;
+                    }
+                } catch (e) {}
+                isTextEncrypted = looksEncrypted;
+
+                if (val.length === 0) {
+                    processBtn.textContent = "Type a message...";
+                    processBtn.disabled = true;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-gray-800 cursor-not-allowed";
+                    processBtn.onclick = null;
+                } else if (looksEncrypted) {
+                    processBtn.textContent = "Decrypt Message";
+                    processBtn.disabled = false;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-pink-600 to-rose-600 shadow-[0_0_20px_rgba(225,29,72,0.4)] border border-pink-500/30";
+                    processBtn.onclick = startTextProcessing;
+                } else {
+                    processBtn.textContent = "Encrypt Message";
+                    processBtn.disabled = false;
+                    processBtn.className = "action-btn w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide hover:scale-[1.02] bg-gradient-to-r from-indigo-600 to-purple-600 shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-500/30";
+                    processBtn.onclick = startTextProcessing;
+                }
+            }
+
+            // --- CRYPTO (Same as before) ---
+            function generateSalt(length) {
+                const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+                let salt = "";
+                for (let i = 0; i < length; i++)
+                    salt += charset.charAt(Math.floor(Math.random() * charset.length));
+                return salt;
+            }
+            function simpleHash(data) {
+                let hash = 5381n;
+                for (let i = 0; i < data.length; i++) {
+                    const c = BigInt(data.charCodeAt(i));
+                    hash = ((hash << 5n) + hash) + c;
+                    hash = BigInt.asUintN(64, hash);
+                }
+                return hash;
+            }
+
+            // --- TEXT PROCESSING ---
+            async function startTextProcessing() {
+                const password = passwordInput.value;
+                if (!password) {
+                    log("Error: Password cannot be empty!", "error");
+                    return;
+                }
+                const text = textInput.value.trim();
+                if (!text)
+                    return;
+
+                if (isTextEncrypted) {
+                    try {
+                        const rawData = atob(text);
+                        const buffer = new Uint8Array(rawData.length);
+                        for (let i = 0; i < rawData.length; i++)
+                            buffer[i] = rawData.charCodeAt(i);
+
+                        let offset = 0;
+                        const brandingCheck = new TextDecoder().decode(buffer.slice(0, BRANDING_BYTES.length));
+                        if (brandingCheck !== BRANDING)
+                            throw new Error("Invalid Branding");
+                        offset += BRANDING_BYTES.length;
+
+                        const saltBytes = buffer.slice(offset, offset + 8);
+                        const salt = new TextDecoder().decode(saltBytes);
+                        offset += 8;
+
+                        const hashBytes = buffer.slice(offset, offset + 8);
+                        const storedHash = new DataView(hashBytes.buffer).getBigUint64(0, true);
+                        offset += 8;
+
+                        const inputHash = simpleHash(password + salt);
+                        if (inputHash !== storedHash)
+                            throw new Error("Incorrect Password");
+
+                        const passwordLength = password.length;
+                        let keyIndex = 0;
+                        const lenByte = buffer[offset];
+                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                        const extLen = lenByte ^ (keyChar + keyIndex) % 256;
+                        keyIndex++;
+                        offset += 1;
+                        for (let i = 0; i < extLen; i++)
+                            keyIndex++;
+                        offset += extLen;
+
+                        const body = buffer.slice(offset);
+                        for (let i = 0; i < body.length; i++) {
+                            const pIndex = keyIndex % passwordLength;
+                            const baseKey = password.charCodeAt(pIndex);
+                            const rollingKey = (baseKey + keyIndex) % 256;
+                            body[i] = body[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        textOutput.value = new TextDecoder().decode(body);
+                        textOutputContainer.classList.remove('hidden');
+                        log("Message Decrypted!", "success");
+                    } catch (e) {
+                        log("Decryption Failed: " + e.message, "error");
+                    }
+                } else {
+                    try {
+                        const passwordLength = password.length;
+                        let keyIndex = 0;
+                        const parts = [];
+                        parts.push(BRANDING_BYTES);
+                        const salt = generateSalt(8);
+                        parts.push(new TextEncoder().encode(salt));
+                        const passHash = simpleHash(password + salt);
+                        const hashBuffer = new ArrayBuffer(8);
+                        new DataView(hashBuffer).setBigUint64(0, passHash, true);
+                        parts.push(new Uint8Array(hashBuffer));
+                        const extBytes = new TextEncoder().encode(".txt");
+                        const extLen = extBytes.length;
+                        const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                        const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
+                        parts.push(new Uint8Array([encryptedLen]));
+                        keyIndex++;
+                        const encryptedExt = new Uint8Array(extLen);
+                        for (let i = 0; i < extLen; i++) {
+                            const k = password.charCodeAt(keyIndex % passwordLength);
+                            const rollingKey = (k + keyIndex) % 256;
+                            encryptedExt[i] = extBytes[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        parts.push(encryptedExt);
+                        const body = new TextEncoder().encode(text);
+                        for (let i = 0; i < body.length; i++) {
+                            const pIndex = keyIndex % passwordLength;
+                            const baseKey = password.charCodeAt(pIndex);
+                            const rollingKey = (baseKey + keyIndex) % 256;
+                            body[i] = body[i] ^ rollingKey;
+                            keyIndex++;
+                        }
+                        parts.push(body);
+
+                        const totalLength = parts.reduce( (acc, curr) => acc + curr.length, 0);
+                        const merged = new Uint8Array(totalLength);
+                        let offset = 0;
+                        for (let p of parts) {
+                            merged.set(p, offset);
+                            offset += p.length;
+                        }
+                        let binary = '';
+                        const len = merged.byteLength;
+                        for (let i = 0; i < len; i++)
+                            binary += String.fromCharCode(merged[i]);
+                        textOutput.value = btoa(binary);
+                        textOutputContainer.classList.remove('hidden');
+                        copyTextOutput();
+                        log("Message Encrypted & Copied!", "success");
+                    } catch (e) {
+                        log("Encryption Failed: " + e.message, "error");
+                    }
+                }
+            }
+
+            function copyTextOutput() {
+                const output = document.getElementById('textOutput');
+                // Use old school execCommand which is generally supported in iframes where clipboard API is blocked
+                output.select();
+                output.setSelectionRange(0, 99999);
+                /* For mobile devices */
+                try {
+                    document.execCommand('copy');
+                    const feedback = document.getElementById('copyFeedback');
+                    feedback.classList.remove('hidden');
+                    setTimeout( () => feedback.classList.add('hidden'), 2000);
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                // Deselect
+                window.getSelection().removeAllRanges();
+                output.blur();
+            }
+
+            // --- FILE PROCESSING ---
+            async function startFileProcessing() {
+                const password = passwordInput.value;
+                if (!password) {
+                    log("Error: Password cannot be empty!", "error");
+                    return;
+                }
+                controlsArea.classList.add('opacity-50', 'pointer-events-none');
+                processBtn.disabled = true;
+                processBtn.innerHTML = '<div class="loader inline-block mr-3"></div> Processing...';
+
+                try {
+                    if (!isEncrypted)
+                        await encryptFile(selectedFile, password);
+                    else
+                        await decryptFile(selectedFile, password);
+                } catch (err) {
+                    log(err.message, 'error');
+                    processBtn.textContent = "Failed";
+                    processBtn.className = "w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide bg-red-600 shadow-lg";
+                    setTimeout( () => {
+                        processBtn.disabled = false;
+                        controlsArea.classList.remove('opacity-50', 'pointer-events-none');
+                        updateFileBtnState();
+                        progressContainer.classList.add('hidden');
+                        progressBar.style.width = '0%';
+                    }
+                    , 670);
+                }
+            }
+
+            async function encryptFile(file, password) {
+                log("Starting File Encryption...");
+
+                // SHOW PROGRESS HERE (Starts only when processing actually begins)
+                progressContainer.classList.remove('hidden');
+
+                const passwordLength = password.length;
+                let keyIndex = 0;
+                const chunks = [];
+                chunks.push(BRANDING_BYTES);
+                const salt = generateSalt(8);
+                chunks.push(new TextEncoder().encode(salt));
+                const passHash = simpleHash(password + salt);
+                const hashBuffer = new ArrayBuffer(8);
+                new DataView(hashBuffer).setBigUint64(0, passHash, true);
+                chunks.push(new Uint8Array(hashBuffer));
+                const dotIndex = file.name.lastIndexOf('.');
+                const ext = dotIndex !== -1 ? file.name.substring(dotIndex) : "";
+                const extBytes = new TextEncoder().encode(ext);
+                const extLen = extBytes.length;
+                const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                const encryptedLen = extLen ^ (keyChar + keyIndex) % 256;
+                chunks.push(new Uint8Array([encryptedLen]));
+                keyIndex++;
+                const encryptedExt = new Uint8Array(extLen);
+                for (let i = 0; i < extLen; i++) {
+                    const k = password.charCodeAt(keyIndex % passwordLength);
+                    const rollingKey = (k + keyIndex) % 256;
+                    encryptedExt[i] = extBytes[i] ^ rollingKey;
+                    keyIndex++;
+                }
+                chunks.push(encryptedExt);
+
+                const totalSize = file.size;
+                let offset = 0;
+                const startTime = performance.now();
+                // Start timer
+
+                while (offset < totalSize) {
+                    const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
+                    const chunkBuffer = await chunkSlice.arrayBuffer();
+                    const chunkArray = new Uint8Array(chunkBuffer);
+                    chunks.push(BRANDING_BYTES);
+                    for (let i = 0; i < chunkArray.length; i++) {
+                        const pIndex = keyIndex % passwordLength;
+                        const baseKey = password.charCodeAt(pIndex);
+                        const rollingKey = (baseKey + keyIndex) % 256;
+                        chunkArray[i] = chunkArray[i] ^ rollingKey;
+                        keyIndex++;
+                    }
+                    chunks.push(chunkArray);
+                    offset += BUFFER_SIZE;
+
+                    // Speed Calculation
+                    const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
+
+                    progressBar.style.width = percent + "%";
+                    progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+
+                    await new Promise(r => setTimeout(r, 0));
+                }
+                const finalName = file.name.substring(0, dotIndex !== -1 ? dotIndex : file.name.length) + EXTENSION;
+                currentProcessedBlob = new Blob(chunks);
+                currentProcessedName = finalName;
+                log("Encryption Complete! Ready to save.", "success");
+                switchToSaveMode();
+                saveProcessedFile();
+            }
+
+            async function decryptFile(file, password) {
+                log("Starting File Decryption...");
+                const passwordLength = password.length;
+                let keyIndex = 0;
+                let offset = 0;
+                const sigBlob = file.slice(0, BRANDING.length);
+                const sigText = await sigBlob.text();
+                if (sigText !== BRANDING)
+                    throw new Error("Invalid branding signature.");
+                offset += BRANDING.length;
+                const saltBlob = file.slice(offset, offset + 8);
+                const salt = await saltBlob.text();
+                offset += 8;
+                const hashBlob = file.slice(offset, offset + 8);
+                const hashBuf = await hashBlob.arrayBuffer();
+                const storedHash = new DataView(hashBuf).getBigUint64(0, true);
+                offset += 8;
+                const inputHash = simpleHash(password + salt);
+                if (inputHash !== storedHash)
+                    throw new Error("ACCESS DENIED: Incorrect Password.");
+                log("Password Verified. Access Granted.", "success");
+
+                // SHOW PROGRESS HERE (Only after password verification success)
+                progressContainer.classList.remove('hidden');
+
+                const lenBlob = file.slice(offset, offset + 1);
+                const lenArr = new Uint8Array(await lenBlob.arrayBuffer());
+                offset += 1;
+                const keyChar = password.charCodeAt(keyIndex % passwordLength);
+                const extLen = lenArr[0] ^ (keyChar + keyIndex) % 256;
+                keyIndex++;
+                const extBlob = file.slice(offset, offset + extLen);
+                const extArr = new Uint8Array(await extBlob.arrayBuffer());
+                offset += extLen;
+                const decryptedExtBytes = new Uint8Array(extLen);
+                for (let i = 0; i < extLen; i++) {
+                    const k = password.charCodeAt(keyIndex % passwordLength);
+                    const rollingKey = (k + keyIndex) % 256;
+                    decryptedExtBytes[i] = extArr[i] ^ rollingKey;
+                    keyIndex++;
+                }
+                const extension = new TextDecoder().decode(decryptedExtBytes);
+                log(`Restored Extension: ${extension}`);
+
+                const chunks = [];
+                const totalSize = file.size;
+                const startTime = performance.now();
+                // Start timer
+
+                while (offset < totalSize) {
+                    offset += BRANDING.length;
+                    if (offset >= totalSize)
+                        break;
+                    const chunkSlice = file.slice(offset, offset + BUFFER_SIZE);
+                    const chunkBuf = await chunkSlice.arrayBuffer();
+                    const chunkArray = new Uint8Array(chunkBuf);
+                    for (let i = 0; i < chunkArray.length; i++) {
+                        const pIndex = keyIndex % passwordLength;
+                        const baseKey = password.charCodeAt(pIndex);
+                        const rollingKey = (baseKey + keyIndex) % 256;
+                        chunkArray[i] = chunkArray[i] ^ rollingKey;
+                        keyIndex++;
+                    }
+                    chunks.push(chunkArray);
+                    offset += chunkArray.length;
+
+                    // Speed Calculation
+                    const percent = Math.min(100, Math.round((offset / totalSize) * 100));
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    const mbps = elapsed > 0 ? (offset / (1024 * 1024) / elapsed).toFixed(2) : "0";
+
+                    progressBar.style.width = percent + "%";
+                    progressPercent.textContent = `${percent}% (${mbps} MB/s)`;
+
+                    await new Promise(r => setTimeout(r, 0));
+                }
+                let originalName = file.name;
+                if (originalName.endsWith(EXTENSION))
+                    originalName = originalName.slice(0, -EXTENSION.length);
+                originalName += extension;
+                currentProcessedBlob = new Blob(chunks);
+                currentProcessedName = originalName;
+                log("Decryption Complete! Ready to save.", "success");
+                switchToSaveMode();
+                saveProcessedFile();
+            }
+
+            function switchToSaveMode() {
+                processBtn.disabled = false;
+                processBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Save File';
+                processBtn.className = "action-btn w-full py-3 md:py-5 rounded-xl md:rounded-2xl font-bold text-lg md:text-xl text-white tracking-wide transform transition hover:scale-[1.02] bg-gradient-to-r from-green-500 to-emerald-600 shadow-[0_0_30px_rgba(16,185,129,0.4)]";
+                processBtn.onclick = saveProcessedFile;
+                resetBtn.classList.remove('hidden');
+            }
+
+            async function saveProcessedFile() {
+                if (!currentProcessedBlob) {
+                    log("No file to save!", "error");
+                    return;
+                }
+                try {
+                    if (window.showSaveFilePicker) {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: currentProcessedName
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(currentProcessedBlob);
+                        await writable.close();
+                        log("File saved successfully!", "success");
+                    } else {
+                        throw new Error("Fallback");
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError')
+                        log("Save cancelled. File kept in memory.", "error");
+                    else {
+                        const url = URL.createObjectURL(currentProcessedBlob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = currentProcessedName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        log("Download started.", "success");
+                    }
+                }
+            }
+
+            // --- KEYBOARD LISTENERS ---
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !processBtn.disabled) {
+                    e.preventDefault();
+                    processBtn.click();
+                }
+            }
+            );
+
+            textInput.addEventListener('keydown', (e) => {
+                // Allow Ctrl+Enter to submit from text area
+                if (e.ctrlKey && e.key === 'Enter' && !processBtn.disabled) {
+                    e.preventDefault();
+                    processBtn.click();
+                }
+            }
+            );
+            
+            // --- EVENTS ---
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                processBtn.click();
+                dropZone.classList.add('active');
             }
-        });
-
-        textInput.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter' && !processBtn.disabled) {
+            );
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+            dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                processBtn.click();
+                dropZone.classList.remove('active');
+                if (e.dataTransfer.files.length)
+                    handleFile(e.dataTransfer.files[0]);
             }
-        });
-        
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('active');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('active');
-            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-        });
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
-        });
-        togglePasswordBtn.addEventListener('click', () => {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            const icon = togglePasswordBtn.querySelector('i');
-            icon.classList.toggle('fa-eye');
-            icon.classList.toggle('fa-eye-slash');
-            icon.classList.toggle('text-gray-500');
-            icon.classList.toggle('text-white');
-        });
+            );
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length)
+                    handleFile(e.target.files[0]);
+            }
+            );
+            togglePasswordBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const icon = togglePasswordBtn.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+                icon.classList.toggle('text-gray-500');
+                icon.classList.toggle('text-white');
+            }
+            );
 
-        switchTab('file');
-    </script>
-</body>
+            switchTab('file');
+        </script>
+        <!-- Code injected by live-server -->
+        <script>
+            // <![CDATA[  <-- For SVG support
+            if ('WebSocket'in window) {
+                (function() {
+                    function refreshCSS() {
+                        var sheets = [].slice.call(document.getElementsByTagName("link"));
+                        var head = document.getElementsByTagName("head")[0];
+                        for (var i = 0; i < sheets.length; ++i) {
+                            var elem = sheets[i];
+                            var parent = elem.parentElement || head;
+                            parent.removeChild(elem);
+                            var rel = elem.rel;
+                            if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+                                var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+                                elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+                            }
+                            parent.appendChild(elem);
+                        }
+                    }
+                    var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+                    var address = protocol + window.location.host + window.location.pathname + '/ws';
+                    var socket = new WebSocket(address);
+                    socket.onmessage = function(msg) {
+                        if (msg.data == 'reload')
+                            window.location.reload();
+                        else if (msg.data == 'refreshcss')
+                            refreshCSS();
+                    }
+                    ;
+                    if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+                        console.log('Live reload enabled.');
+                        sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+                    }
+                }
+                )();
+            } else {
+                console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+            }
+            // ]]>
+        </script>
+    </body>
 </html>
